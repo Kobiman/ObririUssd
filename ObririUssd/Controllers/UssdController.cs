@@ -419,11 +419,11 @@ namespace ObririUssd.Controllers
             //    });
             //}
 
-            if (!PreviousState.TryGetValue(request.MSISDN, out state) && request.USERDATA != string.Empty)
-            {
-                var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
-                PreviousState.TryAdd(request.MSISDN, state);
-            }
+            //if (!PreviousState.TryGetValue(request.MSISDN, out state) && request.USERDATA != string.Empty)
+            //{
+            //    var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+            //    PreviousState.TryAdd(request.MSISDN, state);
+            //}
 
             return Ok(new UssdResponse
             {
