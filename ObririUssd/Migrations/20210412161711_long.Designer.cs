@@ -10,8 +10,8 @@ using ObririUssd.Data;
 namespace ObririUssd.Migrations
 {
     [DbContext(typeof(UssdDataContext))]
-    [Migration("20210411145315_gt")]
-    partial class gt
+    [Migration("20210412161711_long")]
+    partial class @long
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,9 +23,9 @@ namespace ObririUssd.Migrations
 
             modelBuilder.Entity("ObririUssd.Models.UssdTransaction", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<float>("Amount")

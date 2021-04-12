@@ -79,8 +79,8 @@ namespace ObririUssd.Controllers
                 await _context.SaveChangesAsync();
 
                 var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
-                var message = "Your ticket: Monday - PIONEER:1.Direct - 1,  1GHS is registered for Direct - 1. TkT : 123";
-                var endPoint = $"https://apps.mnotify.net/smsapi?key=UdmAJsUYQodKElhwb6uJCB4lA&to={contact}&msg={message}&sender_id=UENR";
+                var message = $"Your ticket: Monday - PIONEER:1.Direct - 1,  1GHS is registered for Direct - 1. Id:{transaction.Id}";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
                 using HttpClient client = new HttpClient();
                 var response = await client.GetAsync(endPoint);
 
@@ -123,8 +123,8 @@ namespace ObririUssd.Controllers
                 await _context.SaveChangesAsync();
 
                 var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
-                var message = "Your ticket: Monday - PIONEER:2.Direct-2,  1GHS is registered for Direct - 2. TkT : 123";
-                var endPoint = $"https://apps.mnotify.net/smsapi?key=UdmAJsUYQodKElhwb6uJCB4lA&to={contact}&msg={message}&sender_id=UENR";
+                var message = $"Your ticket: Monday - PIONEER:2.Direct-2,  1GHS is registered for Direct - 2. Id:{transaction.Id}";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
                 using HttpClient client = new HttpClient();
                 var response = await client.GetAsync(endPoint);
 
@@ -136,7 +136,229 @@ namespace ObririUssd.Controllers
                     MSGTYPE =false
                 });
             }
+            //Pioneer option 3
+            if (state?.CurrentState == "11" && request?.USERDATA == "3")
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var _state = new UserState { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
+                PreviousState.TryAdd(request.MSISDN, _state);
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Mon.-PIONEER:\n2.Direct-3\nEnter 3 numbers from (1-90).\n Separate each number with a space ",
+                    MSGTYPE = true
+                });
+            }
 
+            //Final state for Monday-PIONEER
+            if (state?.CurrentState == "111" && state?.PreviousData == "3")
+            {
+                //var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var transaction = new UssdTransaction
+                {
+                    Amount = 200,
+                    OptionName = "Monday-PIONEER:3.Direct-3",
+                    OptionValue = request.USERDATA,
+                    PhoneNumber = request.MSISDN
+                };
+                _context.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
+                var message = $"Your ticket: Monday - PIONEER:3.Direct-3,  1GHS is registered for Direct - 3. Ticket Id:{transaction.Id} ";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
+                using HttpClient client = new HttpClient();
+                var response = await client.GetAsync(endPoint);
+
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Success",
+                    MSGTYPE = false
+                });
+            }
+            //Pioneer option 4
+            if (state?.CurrentState == "11" && request?.USERDATA == "4")
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var _state = new UserState { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
+                PreviousState.TryAdd(request.MSISDN, _state);
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Mon.-PIONEER:\n4.Direct-4\nEnter 4 numbers from (1-90).\n Separate each number with a space ",
+                    MSGTYPE = true
+                });
+            }
+
+            //Final state for Monday-PIONEER
+            if (state?.CurrentState == "111" && state?.PreviousData == "4")
+            {
+                //var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var transaction = new UssdTransaction
+                {
+                    Amount = 200,
+                    OptionName = "Monday-PIONEER:3.Direct-3",
+                    OptionValue = request.USERDATA,
+                    PhoneNumber = request.MSISDN
+                };
+                _context.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
+                var message = $"Your ticket: Monday - PIONEER:3.Direct-3,  1GHS is registered for Direct - 4. Id:{transaction.Id} ";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
+                using HttpClient client = new HttpClient();
+                var response = await client.GetAsync(endPoint);
+
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Success",
+                    MSGTYPE = false
+                });
+            }
+            //Pioneer option 5
+            if (state?.CurrentState == "11" && request?.USERDATA == "5")
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var _state = new UserState { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
+                PreviousState.TryAdd(request.MSISDN, _state);
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Mon.-PIONEER:\n5.Direct-4\nEnter 5 numbers from (1-90).\n Separate each number with a space ",
+                    MSGTYPE = true
+                });
+            }
+
+            //Final state for Monday-PIONEER
+            if (state?.CurrentState == "111" && state?.PreviousData == "5")
+            {
+                //var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var transaction = new UssdTransaction
+                {
+                    Amount = 200,
+                    OptionName = "Monday-PIONEER:5.Direct-5",
+                    OptionValue = request.USERDATA,
+                    PhoneNumber = request.MSISDN
+                };
+                _context.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
+                var message = $"Your ticket: Monday - PIONEER:3.Direct-5,  1GHS is registered for Direct - 5. Id:{transaction.Id} ";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
+                using HttpClient client = new HttpClient();
+                var response = await client.GetAsync(endPoint);
+
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Success",
+                    MSGTYPE = false
+                });
+            }
+            //OPTION PIONEER sub option 6
+            //Pioneer option 
+            if (state?.CurrentState == "11" && request?.USERDATA == "6")
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var _state = new UserState { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
+                PreviousState.TryAdd(request.MSISDN, _state);
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Mon.-PIONEER:\n6.Perm-2\nEnter 3 numbers from (1-90).\n Separate each number with a space ",
+                    MSGTYPE = true
+                });
+            }
+
+            //Final state for Monday-PIONEER
+            if (state?.CurrentState == "111" && state?.PreviousData == "6")
+            {
+                //var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var transaction = new UssdTransaction
+                {
+                    Amount = 200,
+                    OptionName = "Monday-PIONEER:6.Perm-2",
+                    OptionValue = request.USERDATA,
+                    PhoneNumber = request.MSISDN
+                };
+                _context.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
+                var message = $"Your ticket: Monday - PIONEER:6.Perm-2,  1GHS is registered for Perm - 2. Id:{transaction.Id} ";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
+                using HttpClient client = new HttpClient();
+                var response = await client.GetAsync(endPoint);
+
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Success",
+                    MSGTYPE = false
+                });
+            }
+            //option PIONEER - Sub option 7
+            //OPTION PIONEER sub option 6
+            //Pioneer option 
+            if (state?.CurrentState == "11" && request?.USERDATA == "7")
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var _state = new UserState { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
+                PreviousState.TryAdd(request.MSISDN, _state);
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Mon.-PIONEER:\n6.Perm-3\nEnter 4 numbers from (1-90).\n Separate each number with a space ",
+                    MSGTYPE = true
+                });
+            }
+
+            //Final state for Monday-PIONEER
+            if (state?.CurrentState == "111" && state?.PreviousData == "7")
+            {
+                //var state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+                PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                var transaction = new UssdTransaction
+                {
+                    Amount = 200,
+                    OptionName = "Monday-PIONEER:7.Perm-3",
+                    OptionValue = request.USERDATA,
+                    PhoneNumber = request.MSISDN
+                };
+                _context.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
+                var message = $"Your ticket: Monday - PIONEER:7.Perm-3,  1GHS is registered for Perm - 3. Id:{transaction.Id} ";
+                var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={message}&sender_id=VAG-OBIRI";
+                using HttpClient client = new HttpClient();
+                var response = await client.GetAsync(endPoint);
+
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Success",
+                    MSGTYPE = false
+                });
+            }
             ////Main Option 1 sub 3-----------------------------------------------------------------------------------------------------------------------------------
             //if (state == "11" && request.USERDATA == "3")
             //{
@@ -429,7 +651,7 @@ namespace ObririUssd.Controllers
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
-                MSG = "Welcome to Obiri Lotteries :\n 1)Mon-Pioneer\n 2)Tue-Vag East\n3)Wed-Vag West\n4)Thur-African Lotto\n5)Fri-Obiri Special\n6)Sat-Old Soldier\n7)Sunday-Special",
+                MSG = "Welcome to VAG-OBIRI Lotteries :\n 1)Mon-Pioneer\n 2)Tue-Vag East\n3)Wed-Vag West\n4)Thur-African Lotto\n5)Fri-Obiri Special\n6)Sat-Old Soldier\n7)Sunday-Special",
                 MSGTYPE = true
             });
         }
