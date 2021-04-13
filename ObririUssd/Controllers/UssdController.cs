@@ -133,13 +133,8 @@ namespace ObririUssd.Controllers
 
         private async Task<IActionResult> ProcessFinalState(UssdRequest request, string message,string option)
         {
-            ////int x = 30;
-            //if (Enumerable.Range(1, 100).Contains(x))
-            //    //true
-
-            //    if (x >= 1 && x <= 100)
-
-                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+          
+            PreviousState.TryRemove(request.MSISDN, out UserState tt);
             var transaction = new UssdTransaction
             {
                 Amount = 200,
