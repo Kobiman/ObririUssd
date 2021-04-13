@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>f960d835-62aa-4737-9375-dd9491e5157b</UserSecretsId>
+    <StartupObject>ObririUssd.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

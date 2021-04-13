@@ -44,20 +44,20 @@ namespace ObririUssd.Controllers
                 PreviousState.TryGetValue(request.MSISDN, out state);
             }
 
-            if(string.IsNullOrWhiteSpace(request.USERDATA) && state is null)
+            if(!string.IsNullOrWhiteSpace(request?.USERDATA) && request?.USERDATA != "*920*79" && state is null)
             {
                 Options.TryGetValue(request.USERDATA, out string option);
                 var message = $"{option}\n1.Direct-1\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n";
                 return ProcessMenu(request, message);
             }
-            else if (state?.CurrentState.Length > 2)
+            else if (state?.CurrentState?.Length > 2)
             {
-                Options.TryGetValue(request.USERDATA, out string option);
+                Options.TryGetValue(request.USERDATA, out string optionValue);
                 var key = state.PreviousData;
-                var m = GetFinalStates(key, option, request.USERDATA);
+                var m = GetFinalStates(key, optionValue, request.USERDATA);
                 return await ProcessFinalState(request, m.Message, m.Option);
             }
-            else if(string.IsNullOrWhiteSpace(request.USERDATA) && state?.CurrentState is not "")
+            else if(!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
             {
                 Options.TryGetValue(request.USERDATA, out string option);
                 //previousData+Userdata+CurrentState
@@ -133,41 +133,42 @@ namespace ObririUssd.Controllers
 
         private async Task<IActionResult> ProcessFinalState(UssdRequest request, string message,string option)
         {
+            //var _option = option.Split(":")[1];
             var inputs = request.USERDATA.Split(" ");
-            if(inputs.Length < 2)
-            {
-                return Ok(new UssdResponse
-                {
-                    USERID = userid,
-                    MSISDN = request.MSISDN,
-                    MSG = "Entere value between 1 - 90",
-                    MSGTYPE = false
-                });
-            }
-            foreach (var input in inputs)
-            {
-                if (!int.TryParse(input, out int result))
-                {
-                    return Ok(new UssdResponse
-                    {
-                        USERID = userid,
-                        MSISDN = request.MSISDN,
-                        MSG = "Input value is not in the rigth format",
-                        MSGTYPE = false
-                    });
-                }
+            //if (inputs.Length < 2 && _option != "1.Direct-1")
+            //{
+            //    return Ok(new UssdResponse
+            //    {
+            //        USERID = userid,
+            //        MSISDN = request.MSISDN,
+            //        MSG = "Entere value between 1 - 90",
+            //        MSGTYPE = true
+            //    });
+            //}
+            //foreach (var input in inputs)
+            //{
+            //    if (!int.TryParse(input, out int result))
+            //    {
+            //        return Ok(new UssdResponse
+            //        {
+            //            USERID = userid,
+            //            MSISDN = request.MSISDN,
+            //            MSG = "Input value is not in the rigth format",
+            //            MSGTYPE = true
+            //        });
+            //    }
 
-                if(result > 90 || result < 1)
-                {
-                    return Ok(new UssdResponse
-                    {
-                        USERID = userid,
-                        MSISDN = request.MSISDN,
-                        MSG = "Entere value between 1 - 90",
-                        MSGTYPE = false
-                    });
-                }
-            }
+            //    if(result > 90 || result < 1)
+            //    {
+            //        return Ok(new UssdResponse
+            //        {
+            //            USERID = userid,
+            //            MSISDN = request.MSISDN,
+            //            MSG = "Entere value between 1 - 90",
+            //            MSGTYPE = true
+            //        });
+            //    }
+            //}
 
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
             var transaction = new UssdTransaction
