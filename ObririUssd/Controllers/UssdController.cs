@@ -133,13 +133,43 @@ namespace ObririUssd.Controllers
 
         private async Task<IActionResult> ProcessFinalState(UssdRequest request, string message,string option)
         {
-            ////int x = 30;
-            //if (Enumerable.Range(1, 100).Contains(x))
-            //    //true
+            var inputs = request.USERDATA.Split(" ");
+            if(inputs.Length < 2)
+            {
+                return Ok(new UssdResponse
+                {
+                    USERID = userid,
+                    MSISDN = request.MSISDN,
+                    MSG = "Entere value between 1 - 90",
+                    MSGTYPE = false
+                });
+            }
+            foreach (var input in inputs)
+            {
+                if (!int.TryParse(input, out int result))
+                {
+                    return Ok(new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Input value is not in the rigth format",
+                        MSGTYPE = false
+                    });
+                }
 
-            //    if (x >= 1 && x <= 100)
+                if(result > 90 || result < 1)
+                {
+                    return Ok(new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Entere value between 1 - 90",
+                        MSGTYPE = false
+                    });
+                }
+            }
 
-                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+            PreviousState.TryRemove(request.MSISDN, out UserState tt);
             var transaction = new UssdTransaction
             {
                 Amount = 200,
