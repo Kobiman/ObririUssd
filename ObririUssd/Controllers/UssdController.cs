@@ -44,7 +44,7 @@ namespace ObririUssd.Controllers
                 PreviousState.TryGetValue(request.MSISDN, out state);
             }
 
-            if(request.USERDATA is not "" && state is null)
+            if(string.IsNullOrWhiteSpace(request.USERDATA) && state is null)
             {
                 Options.TryGetValue(request.USERDATA, out string option);
                 var message = $"{option}\n1.Direct-1\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n";
@@ -57,7 +57,7 @@ namespace ObririUssd.Controllers
                 var m = GetFinalStates(key, option, request.USERDATA);
                 return await ProcessFinalState(request, m.Message, m.Option);
             }
-            else if(request.USERDATA is not "" && state?.CurrentState is not "")
+            else if(string.IsNullOrWhiteSpace(request.USERDATA) && state?.CurrentState is not "")
             {
                 Options.TryGetValue(request.USERDATA, out string option);
                 //previousData+Userdata+CurrentState
