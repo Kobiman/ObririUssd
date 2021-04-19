@@ -52,9 +52,9 @@ namespace ObririUssd.Controllers
             }
             else if (state?.CurrentState?.Length > 2)
             {
-                Options.TryGetValue(request.USERDATA, out string optionValue);
-                var key = state.PreviousData;
-                var m = GetFinalStates(key, optionValue, request.USERDATA);
+                var previousValue = state.PreviousData;
+                Options.TryGetValue(previousValue, out string optionName);                
+                var m = GetFinalStates(previousValue, optionName, request.USERDATA);
                 return await ProcessFinalState(request, m.Message, m.Option);
             }
             else if(!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
@@ -118,17 +118,17 @@ namespace ObririUssd.Controllers
             return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} numbers from (1-90).\n Separate each number with a space ";
         }
 
-        private MessageType GetFinalStates(string key, string optionValve, string option)
+        private MessageType GetFinalStates(string previousValue, string optionName, string option)
         {
-            switch (key)
+            switch (previousValue)
             {
                 //previousData+Userdata+CurrentState
                 case "6":
-                    return new MessageType { Message = $"Your ticket: {optionValve}:{option}.Perm-2,  1GHS is registered for Perm - 2. Id", Option = $"{optionValve} - Perm 2" };
+                    return new MessageType { Message = $"Your ticket: {optionName}:{previousValue}.Perm-2,  1GHS is registered for Perm - 2. Id", Option = $"{option} - Perm 2" };
                 case "7":
-                    return new MessageType { Message = $"Your ticket: {optionValve}:{option}.Perm-3,  1GHS is registered for Perm - 3. Id", Option = $"{optionValve} - Perm 3" };
+                    return new MessageType { Message = $"Your ticket: {optionName}:{previousValue}.Perm-3,  1GHS is registered for Perm - 3. Id", Option = $"{option} - Perm 3" };
             }
-            return new MessageType { Message = $"Your ticket: {optionValve}:{option}.Direct-{option},  1GHS is registered for Direct - {option}. Id", Option = $"{optionValve}:{option}.Direct - {option}" };
+            return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  1GHS is registered for Direct - {option}. Id", Option = $"{optionName}:{previousValue}.Direct - {option}" };
         }
 
         private async Task<IActionResult> ProcessFinalState(UssdRequest request, string message,string option)
