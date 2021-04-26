@@ -52,9 +52,9 @@ namespace ObririUssd.Controllers
             }
             else if (state?.CurrentState?.Length > 2)
             {
-                var previousValue = state.PreviousData;
-                Options.TryGetValue(previousValue, out string optionName);                
-                var m = GetFinalStates(previousValue, optionName, request.USERDATA);
+                var mainMenuItem = state.CurrentState.AsSpan().Slice(0,1).ToString();
+                Options.TryGetValue(mainMenuItem, out string optionName);                
+                var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
                 return await ProcessFinalState(request, m.Message, m.Option);
             }
             else if(!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
@@ -128,7 +128,7 @@ namespace ObririUssd.Controllers
                 case "7":
                     return new MessageType { Message = $"Your ticket: {optionName}:{previousValue}.Perm-3,  1GHS is registered for Perm - 3. Id", Option = $"{option} - Perm 3" };
             }
-            return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  1GHS is registered for Direct - {option}. Id", Option = $"{optionName}:{previousValue}.Direct - {option}" };
+            return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  1GHS is registered for Direct - {option}. Id", Option = $"{optionName}:Direct - {previousValue}" };
         }
 
         private async Task<IActionResult> ProcessFinalState(UssdRequest request, string message,string option)
