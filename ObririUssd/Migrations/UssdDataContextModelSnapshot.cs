@@ -21,9 +21,9 @@ namespace ObririUssd.Migrations
 
             modelBuilder.Entity("ObririUssd.Models.UssdTransaction", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<float>("Amount")

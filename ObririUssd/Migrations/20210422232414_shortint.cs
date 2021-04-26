@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ObririUssd.Migrations
 {
-    public partial class @long : Migration
+    public partial class shortint : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,7 +11,7 @@ namespace ObririUssd.Migrations
                 name: "Trans",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OptionName = table.Column<string>(type: "nvarchar(max)", nullable: true),

@@ -7,7 +7,7 @@ namespace ObririUssd.Models
 {
     public class UssdTransaction
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
         public string PhoneNumber { get; set; }
         public string OptionName { get; set; }
         public string OptionValue { get; set; }
