@@ -59,7 +59,8 @@ namespace ObririUssd.Controllers
             }
             else if(!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
             {
-                Options.TryGetValue(request.USERDATA, out string option);
+                var mainMenuItem = state.CurrentState.AsSpan().Slice(0, 1).ToString();
+                Options.TryGetValue(mainMenuItem, out string option);
                 //previousData+Userdata+CurrentState
                 var key = state.PreviousData+request.USERDATA+state.CurrentState;
                 var message = GetSubmenus(key, option, request.USERDATA);
