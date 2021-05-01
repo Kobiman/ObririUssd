@@ -134,42 +134,32 @@ namespace ObririUssd.Controllers
 
         private async Task<IActionResult> ProcessFinalState(UssdRequest request, string message,string option)
         {
-            //var _option = option.Split(":")[1];
             var inputs = request.USERDATA.Split(" ");
-            //if (inputs.Length < 2 && _option != "1.Direct-1")
-            //{
-            //    return Ok(new UssdResponse
-            //    {
-            //        USERID = userid,
-            //        MSISDN = request.MSISDN,
-            //        MSG = "Entere value between 1 - 90",
-            //        MSGTYPE = true
-            //    });
-            //}
-            //foreach (var input in inputs)
-            //{
-            //    if (!int.TryParse(input, out int result))
-            //    {
-            //        return Ok(new UssdResponse
-            //        {
-            //            USERID = userid,
-            //            MSISDN = request.MSISDN,
-            //            MSG = "Input value is not in the rigth format",
-            //            MSGTYPE = true
-            //        });
-            //    }
 
-            //    if(result > 90 || result < 1)
-            //    {
-            //        return Ok(new UssdResponse
-            //        {
-            //            USERID = userid,
-            //            MSISDN = request.MSISDN,
-            //            MSG = "Entere value between 1 - 90",
-            //            MSGTYPE = true
-            //        });
-            //    }
-            //}
+            foreach (var input in inputs)
+            {
+                if (!int.TryParse(input, out int result))
+                {
+                    return Ok(new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Input value is not in the rigth format",
+                        MSGTYPE = true
+                    });
+                }
+
+                if (result > 90 || result < 1)
+                {
+                    return Ok(new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Entere value between 1 - 90",
+                        MSGTYPE = true
+                    });
+                }
+            }
 
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
             var transaction = new UssdTransaction
