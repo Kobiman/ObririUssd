@@ -125,9 +125,9 @@ namespace ObririUssd.Controllers
             {
                 //previousData+Userdata+CurrentState
                 case "6":
-                    return new MessageType { Message = $"Your ticket: {optionName}:{previousValue}.Perm-2,  1GHS is registered for Perm - 2. Id", Option = $"{option} - Perm 2" };
+                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-2,  1GHS is registered for Perm - 2. Id", Option = $"{optionName} - Perm 2" };
                 case "7":
-                    return new MessageType { Message = $"Your ticket: {optionName}:{previousValue}.Perm-3,  1GHS is registered for Perm - 3. Id", Option = $"{option} - Perm 3" };
+                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-3,  1GHS is registered for Perm - 3. Id", Option = $"{optionName} - Perm 3" };
             }
             return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  1GHS is registered for Direct - {option}. Id", Option = $"{optionName}:Direct - {previousValue}" };
         }
