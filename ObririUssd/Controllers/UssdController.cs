@@ -73,7 +73,7 @@ namespace ObririUssd.Controllers
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
-                MSG = "Welcome, VAG-OBIRI Lotteries:\n 1)Mon-Pioneer\n 2)Tue-Vag East\n3)Wed-Vag West\n4)Thur-African Lotto\n5)Fri-Obiri Special\n6)Sat-Old Soldier\n7)Sunday-Special",
+                MSG = "Welcome, VAG-OBIRI Lotteries:\n 1)Pioneer\n 2)Vag East\n3)Vag West\n4)African Lotto\n5)Obiri Special\n6)Old Soldier\n7)Sunday-Special",
                 MSGTYPE = true
             });
         }
