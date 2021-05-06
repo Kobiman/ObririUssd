@@ -17,25 +17,26 @@ namespace ObririUssd.Controllers
     {
         static ConcurrentDictionary<string, UserState> _previousState;
         static ConcurrentDictionary<string, UserState> PreviousState = _previousState ?? new ConcurrentDictionary<string, UserState>();
-        ConcurrentDictionary<string, string> Options = new();
+        Dictionary<string, string> Options = new Dictionary<string, string> 
+        {
+            { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG EAST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI FRIDAY" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
+        };
+        Dictionary<string, string> DaysOfTheWeek = new Dictionary<string, string>
+        {
+            { "Monday", "1" },{ "Tuesday", "2" },{ "Wednesday", "3" },{ "Thursday", "4" },{ "Friday", "5" },{ "Saturday", "6" },{ "Sunday", "7" }
+        };
         private UserState state = null;
         private string userid = "WEB_MATE";
         private UssdDataContext _context;
         public UssdController(UssdDataContext context)
         {
             _context = context;
-            Options.TryAdd("1", "Mon.-PIONEER");
-            Options.TryAdd("2", "Tue.-VAG EAST");
-            Options.TryAdd("3", "Wed.-VAG EAST");
-            Options.TryAdd("4", "Thur.-AFRICAN LOTTO");
-            Options.TryAdd("5", "Fri.-OBIRI FRIDAY");
-            Options.TryAdd("6", "Sat.-OLD SOLDIER");
-            Options.TryAdd("7", "SUN.-SPECIAL");
         }
 
         [HttpPost("index")]
         public async Task<IActionResult> Index([FromBody] UssdRequest request)
         {
+
             if (PreviousState.TryGetValue(request.MSISDN, out state))
             {
                 PreviousState.TryRemove(request.MSISDN, out UserState tt);
@@ -44,25 +45,54 @@ namespace ObririUssd.Controllers
                 PreviousState.TryGetValue(request.MSISDN, out state);
             }
 
-            if(!string.IsNullOrWhiteSpace(request?.USERDATA) && request?.USERDATA != "*920*79" && state is null)
+            if((string.IsNullOrWhiteSpace(request?.USERDATA) || request?.USERDATA == "*920*79") && state is null)
             {
-                Options.TryGetValue(request.USERDATA, out string option);
+                var day = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
+                Options.TryGetValue(day, out string option);
                 var message = $"{option}\n1.Direct-1\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n";
                 return ProcessMenu(request, message);
             }
-            else if (state?.CurrentState?.Length > 2)
+            else if (state?.CurrentState?.Length >= 2)
             {
-                var mainMenuItem = state.CurrentState.AsSpan().Slice(0,1).ToString();
+                var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
                 Options.TryGetValue(mainMenuItem, out string optionName);                
                 var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
                 return await ProcessFinalState(request, m.Message, m.Option);
             }
             else if(!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
             {
-                var mainMenuItem = state.CurrentState.AsSpan().Slice(0, 1).ToString();
-                Options.TryGetValue(mainMenuItem, out string option);
+                //var mainMenuItem = state.CurrentState.AsSpan().Slice(0, 1).ToString();
+                var day = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
+                Options.TryGetValue(day, out string option);
+                if (!int.TryParse(request.USERDATA, out int result))
+                {
+                    var _state = new UserState { CurrentState = "", PreviousData = request.USERDATA };
+                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                    PreviousState.TryAdd(request.MSISDN, _state);
+                    return Ok(new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Input value is not in the rigth format",
+                        MSGTYPE = true
+                    });
+                }
+
+                if (result > 7 || result < 1)
+                {
+                    var _state = new UserState { CurrentState = "", PreviousData = request.USERDATA };
+                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                    PreviousState.TryAdd(request.MSISDN, _state);
+                    return Ok(new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Entere value between 1 - 7",
+                        MSGTYPE = true
+                    });
+                }
                 //previousData+Userdata+CurrentState
-                var key = state.PreviousData+request.USERDATA+state.CurrentState;
+                var key = request.USERDATA+state.CurrentState;
                 var message = GetSubmenus(key, option, request.USERDATA);
                 return ProcessSubMenu(request, message);
             }
@@ -73,7 +103,7 @@ namespace ObririUssd.Controllers
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
-                MSG = "Welcome, VAG-OBIRI Lotteries:\n 1)Mon-Pioneer\n 2)Tue-Vag East\n3)Wed-Vag West\n4)Thur-African Lotto\n5)Fri-Obiri Special\n6)Sat-Old Soldier\n7)Sunday-Special",
+                MSG = "Welcome, VAG-OBIRI Lotteries:\n 1)Pioneer\n 2)Vag East\n3)Vag East\n4)African Lotto\n5)Obiri Special\n6)Old Soldier\n7)Sunday-Special",
                 MSGTYPE = true
             });
         }
@@ -82,34 +112,34 @@ namespace ObririUssd.Controllers
         {
             switch (key)
             {
-                //previousData+Userdata+CurrentState
-                case "1111":
-                case "2121":
-                case "3131":
-                case "4141":
-                case "5151":
-                case "6161":
-                case "7171":
+                //Userdata+CurrentState
+                case "11":
+                case "12":
+                case "13":
+                case "14":
+                case "15":
+                case "16":
+                case "17":
                     return $"{option}\n1.Direct-1\nEnter 1 number from (1-90)";
                 //option 6
-                case "1611":
-                case "2621":
-                case "3631":
-                case "4641":
-                case "5651":
-                case "6661":
-                case "7671":
+                case "61":
+                case "62":
+                case "63":
+                case "64":
+                case "65":
+                case "66":
+                case "67":
                     //case "7171":
                     return $"{option}\n6.Perm - 2 \nEnter 3 number from (1-90)";
 
                 //option 7
-                case "1711":
-                case "2721":
-                case "3731":
-                case "4741":
-                case "5751":
-                case "6761":
-                case "7771":
+                case "71":
+                case "72":
+                case "73":
+                case "74":
+                case "75":
+                case "76":
+                case "77":
                     //case "7171":
                     return $"{option}\n7.Perm - 3 \nEnter 4 number from (1-90)";
 
@@ -174,7 +204,7 @@ namespace ObririUssd.Controllers
 
             var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
             var _message = $"{message}:{transaction.Id}";
-            var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={_message}&sender_id=VAG-OBIRI";
+            var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={_message}&sender_id=VAG-OBIRI-LOTTERIES";
             using HttpClient client = new HttpClient();
             var response = await client.GetAsync(endPoint);
 
@@ -203,7 +233,7 @@ namespace ObririUssd.Controllers
 
         private IActionResult ProcessMenu(UssdRequest request, string message)
         {
-            var _state = new UserState { CurrentState = request.USERDATA, PreviousData = request.USERDATA };
+            var _state = new UserState { CurrentState = "", PreviousData = request.USERDATA };
             PreviousState.TryAdd(request.MSISDN, _state);
             return Ok(new UssdResponse
             {
