@@ -44,6 +44,14 @@ namespace ObririUssd.Controllers
                 MSGTYPE = false
             });
 
+            if (DateTime.Now.Hour < 6) return Ok(new UssdResponse
+            {
+                USERID = userid,
+                MSISDN = request.MSISDN,
+                MSG = "Sorry",
+                MSGTYPE = false
+            });
+
             if (PreviousState.TryGetValue(request.MSISDN, out state))
             {
                 PreviousState.TryRemove(request.MSISDN, out UserState tt);
