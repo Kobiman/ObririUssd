@@ -36,6 +36,13 @@ namespace ObririUssd.Controllers
         [HttpPost("index")]
         public async Task<IActionResult> Index([FromBody] UssdRequest request)
         {
+            if(DateTime.Now.Hour >= 18) return Ok(new UssdResponse
+            {
+                USERID = userid,
+                MSISDN = request.MSISDN,
+                MSG = "Sorry",
+                MSGTYPE = false
+            });
 
             if (PreviousState.TryGetValue(request.MSISDN, out state))
             {

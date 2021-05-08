@@ -41,6 +41,9 @@ namespace ObririUssd.Migrations
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("Win")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("Trans");
