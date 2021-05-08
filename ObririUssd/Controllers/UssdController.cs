@@ -40,7 +40,7 @@ namespace ObririUssd.Controllers
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
-                MSG = "Sorry no draw has ended",
+                MSG = "Sorry draw has ended",
                 MSGTYPE = false
             });
 
@@ -48,7 +48,7 @@ namespace ObririUssd.Controllers
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
-                MSG = "Sorry no draw has ended",
+                MSG = "Sorry draw has ended",
                 MSGTYPE = false
             });
 
