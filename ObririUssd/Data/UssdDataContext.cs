@@ -14,5 +14,7 @@ namespace ObririUssd.Data
         }
 
         public DbSet<UssdTransaction> Trans { get; set; }
+        public DbSet<UssdLock> UssdLock { get; set; }
+        public DbSet<TransactionLog> TransactionLogs { get; set; }
     }
 }

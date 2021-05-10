@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ObririUssd.Data;
 using ObririUssd.Models;
 using System;
@@ -36,7 +37,8 @@ namespace ObririUssd.Controllers
         [HttpPost("index")]
         public async Task<IActionResult> Index([FromBody] UssdRequest request)
         {
-            if(DateTime.Now.Hour >= 18) return Ok(new UssdResponse
+            var duration =await _context.UssdLock.FirstOrDefaultAsync();
+            if(DateTime.Now.Hour >= duration.EndTime) return Ok(new UssdResponse
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
@@ -44,7 +46,7 @@ namespace ObririUssd.Controllers
                 MSGTYPE = false
             });
 
-            if (DateTime.Now.Hour < 6) return Ok(new UssdResponse
+            if (DateTime.Now.Hour < duration.StartTime) return Ok(new UssdResponse
             {
                 USERID = userid,
                 MSISDN = request.MSISDN,
