@@ -9,8 +9,6 @@ namespace ObririUssd.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        public int TotalDraws { get; set; }
-        public float TotalDrawsAmount { get; set; }
         public int WiningDraws { get; set; }
         public float WiningDrawAmount { get; set; }
     }
