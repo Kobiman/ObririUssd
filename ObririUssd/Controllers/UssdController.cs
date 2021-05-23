@@ -212,6 +212,7 @@ namespace ObririUssd.Controllers
             var transaction = new UssdTransaction
             {
                 Amount = 200,
+                WinningAmount = 0,
                 OptionName = option,
                 OptionValue = request.USERDATA,
                 PhoneNumber = request.MSISDN
@@ -221,7 +222,7 @@ namespace ObririUssd.Controllers
 
             var contact = new string(request.MSISDN.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
             var _message = $"{message}:{transaction.Id}";
-            var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={_message}&sender_id=VAG-OBIRI-LOTTERIES";
+            var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={contact}&msg={_message}&sender_id=VAG-OBIRI";
             using HttpClient client = new HttpClient();
             var response = await client.GetAsync(endPoint);
 
