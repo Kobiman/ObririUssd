@@ -85,15 +85,26 @@ namespace ObririUssd.Services
             }
             else if (state?.CurrentState?.Length == 3)
             {
+                if (!int.TryParse(request.USERDATA, out int result))
+                {
+                    DecreaseState(request);
+                    return new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Input value is not in the rigth format",
+                        MSGTYPE = true
+                    };
+                }
                 // HttpResponseMessage response = await request.ProcessPayment();
 
-                 //if (response.IsSuccessStatusCode)
-                 //{
-                 //    string jsonResponse = await response.Content.ReadAsStringAsync();
-                 //    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
-                 //    if (result.status == "approved")
-                 //    {
-                         var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
+                //if (response.IsSuccessStatusCode)
+                //{
+                //    string jsonResponse = await response.Content.ReadAsStringAsync();
+                //    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
+                //    if (result.status == "approved")
+                //    {
+                var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
                          Options.TryGetValue(mainMenuItem, out string optionName);
                          var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
                          //PreviousState.TryRemove(request.MSISDN, out UserState tt);
@@ -209,17 +220,6 @@ namespace ObririUssd.Services
 
         private async Task<UssdResponse> ProcessFinalState(UssdRequest request, string message, string option,string amount)
         {
-            if (!int.TryParse(request.USERDATA, out int result))
-            {
-                DecreaseState(request);
-                return new UssdResponse
-                {
-                    USERID = userid,
-                    MSISDN = request.MSISDN,
-                    MSG = "Input value is not in the rigth format",
-                    MSGTYPE = true
-                };
-            }
 
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
             var transaction = new UssdTransaction

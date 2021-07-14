@@ -29,6 +29,9 @@ namespace ObririUssd.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("MachineNumbers")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<float>("WiningDrawAmount")
                         .HasColumnType("real");
 
