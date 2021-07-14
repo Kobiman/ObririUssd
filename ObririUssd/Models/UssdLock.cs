@@ -10,5 +10,7 @@ namespace ObririUssd.Models
         public int Id { get; set; }
         public int StartTime { get; set; }
         public int EndTime { get; set; }
+
+        public bool DrawHasEnded() => DateTime.Now.Hour >= EndTime || DateTime.Now.Hour < StartTime;
     }
 }
