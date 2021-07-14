@@ -74,6 +74,9 @@ namespace ObririUssd.Migrations
                     b.Property<string>("OptionValue")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -82,6 +85,9 @@ namespace ObririUssd.Migrations
 
                     b.Property<bool>("Win")
                         .HasColumnType("bit");
+
+                    b.Property<float>("WinningAmount")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 

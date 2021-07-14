@@ -12,7 +12,10 @@ namespace ObririUssd.Models
         public string OptionName { get; set; }
         public string OptionValue { get; set; }
         public float Amount { get; set; }
+        public float WinningAmount { get; set; }
         public bool Win { get; set; }
+        public int PaymentStatus { get; set; }
+
         public DateTime TransactionDate { get; set; } = DateTime.Now;
     }
 }
