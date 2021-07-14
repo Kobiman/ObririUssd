@@ -135,7 +135,7 @@ namespace ObririUssd.Services
                 if (!request.ValidateInputRange(7, 1))
                 {
                     DecreaseState(request);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Entere value between 1 - 7", true);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter value between 1 - 7", true);
                 }
                 var key = request.USERDATA + state.CurrentState;
                 var message = GetSubmenus(key, option, request.USERDATA);
@@ -176,7 +176,7 @@ namespace ObririUssd.Services
                 case "15":
                 case "16":
                 case "17":
-                    return $"{option}\n1.Direct-1\nEnter 1 number from (1-90)";
+                    return $"{option}\n1.Direct-1\nEnter 1 number(s) from (1-90)";
                 //option 6
                 case "61":
                 case "62":
@@ -186,7 +186,7 @@ namespace ObririUssd.Services
                 case "66":
                 case "67":
                     //case "7171":
-                    return $"{option}\n6.Perm - 2 \nEnter 3 number from (1-90)";
+                    return $"{option}\n6.Perm - 2 \nEnter 3 number(s) from (1-90)";
 
                 //option 7
                 case "71":
@@ -197,12 +197,12 @@ namespace ObririUssd.Services
                 case "76":
                 case "77":
                     //case "7171":
-                    return $"{option}\n7.Perm - 3 \nEnter 4 number from (1-90)";
+                    return $"{option}\n7.Perm - 3 \nEnter 4 number(s) from (1-90)";
 
 
 
             }
-            return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} numbers from (1-90).\n Separate each number with a space ";
+            return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} number(s) from (1-90).\n Separate each number with a space ";
         }
 
         private MessageType GetFinalStates(string previousValue, string optionName, string option)
