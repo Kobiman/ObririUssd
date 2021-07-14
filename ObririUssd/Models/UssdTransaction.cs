@@ -14,7 +14,7 @@ namespace ObririUssd.Models
         public float Amount { get; set; }
         public float WinningAmount { get; set; }
         public bool Win { get; set; }
-        public int PaymentStatus { get; set; }
+        public bool PaymentStatus { get; set; }
 
         public DateTime TransactionDate { get; set; } = DateTime.Now;
     }
