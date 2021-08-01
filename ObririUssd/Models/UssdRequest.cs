@@ -40,7 +40,7 @@ namespace ObririUssd.Models
             }
             return value;
         }
-        public async Task<HttpResponseMessage> ProcessPayment()
+        public Task<HttpResponseMessage> ProcessPayment()
         {
             var json = JsonSerializer.Serialize(
                                     new PaymentRequest
@@ -56,12 +56,13 @@ namespace ObririUssd.Models
             HttpContent content = new StringContent(json, Encoding.UTF8, "application/json");
             var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            //client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", 
                 Convert.ToBase64String(Encoding.UTF8.GetBytes("vag60e5c12178f1f:ZGNlNDY2ODRlNmUzODRlZTQ4MTMxZTdkYWZiZjNlZDI=")));
             client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             
-            var response = await client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
-            return response;
+            return client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
         }
 
         private string Unique_Code()

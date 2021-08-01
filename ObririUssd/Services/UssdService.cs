@@ -19,7 +19,7 @@ namespace ObririUssd.Services
         static ConcurrentDictionary<string, UserState> PreviousState = _previousState ?? new ConcurrentDictionary<string, UserState>();
         Dictionary<string, string> Options = new Dictionary<string, string>
         {
-            { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG EAST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI FRIDAY" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
+            { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI FRIDAY" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
         };
         Dictionary<string, string> DaysOfTheWeek = new Dictionary<string, string>
         {
@@ -85,41 +85,41 @@ namespace ObririUssd.Services
             }
             else if (state?.CurrentState?.Length == 3)
             {
-                if (!int.TryParse(request.USERDATA, out int result))
-                {
-                    DecreaseState(request);
-                    return new UssdResponse
-                    {
-                        USERID = userid,
-                        MSISDN = request.MSISDN,
-                        MSG = "Input value is not in the rigth format",
-                        MSGTYPE = true
-                    };
-                }
-                // HttpResponseMessage response = await request.ProcessPayment();
-
-                //if (response.IsSuccessStatusCode)
+                //if (!int.TryParse(request.USERDATA, out int r))
                 //{
-                //    string jsonResponse = await response.Content.ReadAsStringAsync();
-                //    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
-                //    if (result.status == "approved")
+                //    DecreaseState(request);
+                //    return new UssdResponse
                 //    {
-                var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
-                         Options.TryGetValue(mainMenuItem, out string optionName);
-                         var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
-                         //PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                         return await ProcessFinalState(request, m.Message, m.Option, request.USERDATA);
-                     //}
-                    //PreviousState.TryRemove(request.MSISDN, out UserState _);
-                    //return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                //        USERID = userid,
+                //        MSISDN = request.MSISDN,
+                //        MSG = "Input value is not in the rigth format",
+                //        MSGTYPE = true
+                //    };
                 //}
-                // else
-                // {
-                //    string jsonResponse = await response.Content.ReadAsStringAsync();
-                //    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
-                //    PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                //    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
-                // }
+                var response = await request.ProcessPayment();
+
+                if (true)//(response.IsSuccessStatusCode)
+                {
+                    string jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
+                    if (true)//(result.status == "approved")
+                    {
+                        var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
+                        Options.TryGetValue(mainMenuItem, out string optionName);
+                        var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+
+                        return await ProcessFinalState(request, m.Message, m.Option, request.USERDATA);
+                    }
+                    PreviousState.TryRemove(request.MSISDN, out UserState _);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                }
+                else
+                {
+                    string jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
+                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                }
             }
 
             else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
@@ -205,17 +205,17 @@ namespace ObririUssd.Services
             return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} number(s) from (1-90).\n Separate each number with a space ";
         }
 
-        private MessageType GetFinalStates(string previousValue, string optionName, string option)
+        private MessageType GetFinalStates(string previousValue, string optionName, string amount)
         {
             switch (previousValue)
             {
                 //previousData+Userdata+CurrentState
                 case "6":
-                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-2,  1GHS is registered for Perm - 2. Id", Option = $"{optionName}:Perm - 2" };
+                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-2,  GHS {amount} is registered for Perm - 2. Id", Option = $"{optionName}:Perm - 2" };
                 case "7":
-                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-3,  1GHS is registered for Perm - 3. Id", Option = $"{optionName}:Perm - 3" };
+                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-3,  GHS {amount} is registered for Perm - 3. Id", Option = $"{optionName}:Perm - 3" };
             }
-            return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  1GHS is registered for Direct - {option}. Id", Option = $"{optionName}:Direct - {previousValue}" };
+            return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  GHS {amount} is registered for Direct - {previousValue}. Id", Option = $"{optionName}:Direct - {previousValue}" };
         }
 
         private async Task<UssdResponse> ProcessFinalState(UssdRequest request, string message, string option,string amount)
