@@ -108,7 +108,7 @@ namespace ObririUssd.Services
                         Options.TryGetValue(mainMenuItem, out string optionName);
                         var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
 
-                        return await ProcessFinalState(request, m.Message, m.Option, request.USERDATA);
+                        return await ProcessFinalState(request, m.Message, m.Option, state.PreviousData);
                     }
                     PreviousState.TryRemove(request.MSISDN, out UserState _);
                     return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
@@ -218,15 +218,15 @@ namespace ObririUssd.Services
             return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  GHS {amount} is registered for Direct - {previousValue}. Id", Option = $"{optionName}:Direct - {previousValue}" };
         }
 
-        private async Task<UssdResponse> ProcessFinalState(UssdRequest request, string message, string option,string amount)
+        private async Task<UssdResponse> ProcessFinalState(UssdRequest request, string message, string option,string optionValue)
         {
 
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
             var transaction = new UssdTransaction
             {
-                Amount = int.Parse(amount),
+                Amount = int.Parse(request.USERDATA),
                 OptionName = option,
-                OptionValue = request.USERDATA,
+                OptionValue = optionValue,
                 PhoneNumber = request.MSISDN
             };
             _context.Add(transaction);
