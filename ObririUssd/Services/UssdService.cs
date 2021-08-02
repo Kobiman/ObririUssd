@@ -68,10 +68,13 @@ namespace ObririUssd.Services
                     //}
                     if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1))
                     {
+                        PreviousState.TryRemove(request.MSISDN, out UserState t);
+                        var state = t with { SelectedValues = request.USERDATA };
+                        PreviousState.TryAdd(request.MSISDN, state);
                         return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
                     }
                     PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                    var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData };
+                    var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
                     PreviousState.TryAdd(request.MSISDN, _state);
                     return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} number(s) from (1-90). \n Separate each number with a space ", true);
                 }
@@ -108,7 +111,7 @@ namespace ObririUssd.Services
                         Options.TryGetValue(mainMenuItem, out string optionName);
                         var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
 
-                        return await ProcessFinalState(request, m.Message, m.Option, state.PreviousData);
+                        return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
                     }
                     PreviousState.TryRemove(request.MSISDN, out UserState _);
                     return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
