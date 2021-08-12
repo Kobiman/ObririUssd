@@ -50,7 +50,7 @@ namespace ObririUssd.Services
                     PreviousState.TryGetValue(request.MSISDN, out state);
                 }
                 Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
-                return ProcessMenu(request, $"{option}\n1.Direct-1\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+                return ProcessMenu(request, $"{option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
             }
             
             if (state?.CurrentState?.Length == 2)
@@ -88,41 +88,41 @@ namespace ObririUssd.Services
             }
             else if (state?.CurrentState?.Length == 3)
             {
-                //if (!int.TryParse(request.USERDATA, out int r))
-                //{
-                //    DecreaseState(request);
-                //    return new UssdResponse
-                //    {
-                //        USERID = userid,
-                //        MSISDN = request.MSISDN,
-                //        MSG = "Input value is not in the rigth format",
-                //        MSGTYPE = true
-                //    };
-                //}
-                var response = await request.ProcessPayment();
-
-                if (true)//(response.IsSuccessStatusCode)
+                if (!int.TryParse(request.USERDATA, out int r))
                 {
-                    string jsonResponse = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
-                    if (true)//(result.status == "approved")
+                    DecreaseState(request);
+                    return new UssdResponse
                     {
-                        var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
-                        Options.TryGetValue(mainMenuItem, out string optionName);
-                        var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Input value is not in the rigth format",
+                        MSGTYPE = true
+                    };
+                }
+                var response = request.ProcessPayment();
 
-                        return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
-                    }
-                    PreviousState.TryRemove(request.MSISDN, out UserState _);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
-                }
-                else
+                //if(response.IsSuccessStatusCode)//(true)
+                //{
+                //    string jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
+                if (result.status == "approved")//(true)
                 {
-                    string jsonResponse = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
-                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                    var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
+                    Options.TryGetValue(mainMenuItem, out string optionName);
+                    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+
+                    return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
                 }
+                PreviousState.TryRemove(request.MSISDN, out UserState _);
+                return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                //}
+                //else
+                //{
+                //    string jsonResponse = await response.Content.ReadAsStringAsync();
+                //    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
+                //    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                //    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                //}
             }
 
             else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
@@ -135,10 +135,10 @@ namespace ObririUssd.Services
                     return UssdResponse.CreateResponse(userid, request.MSISDN, "Input value is not in the rigth format", true);
                 }
 
-                if (!request.ValidateInputRange(7, 1))
+                if (!request.ValidateInputRange(7, 2))
                 {
                     DecreaseState(request);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter value between 1 - 7", true);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Enter value between {2} - {7}", true);
                 }
                 var key = request.USERDATA + state.CurrentState;
                 var message = GetSubmenus(key, option, request.USERDATA);
@@ -146,12 +146,12 @@ namespace ObririUssd.Services
             }
 
             Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
-            return ProcessMenu(request, $"{_option}\n1.Direct-1\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+            return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
         }
 
         private void DecreaseState(UssdRequest request)
         {
-            var _state = new UserState { CurrentState = state.CurrentState.Substring(0, 2), PreviousData = request.USERDATA };
+            var _state = new UserState { CurrentState = state.CurrentState.Length == 1 ? "" : state.CurrentState.Substring(0, 2), PreviousData = request.USERDATA };
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
             PreviousState.TryAdd(request.MSISDN, _state);
         }
@@ -236,6 +236,7 @@ namespace ObririUssd.Services
             await _context.SaveChangesAsync();
 
             await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id}");
+            PreviousState.TryRemove(request.MSISDN, out UserState _);
 
             return new UssdResponse
             {

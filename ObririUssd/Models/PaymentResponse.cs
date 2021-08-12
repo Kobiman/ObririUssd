@@ -9,8 +9,9 @@ namespace ObririUssd.Models
     {
         //public string transaction_id { get; set; }
         public string status { get; set; }
-        public int code { get; set; }
-        public string description { get; set; }
+        public string code { get; set; }
+        public string reason { get; set; }
+        public string transaction_id { get; set; }
     }
     //"{\"status\":\"failed\",\"code\":979,\"description\":\"Error: Content type is not set or is not application\\/json\"}"
 }

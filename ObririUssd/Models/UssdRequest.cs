@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -40,29 +41,51 @@ namespace ObririUssd.Models
             }
             return value;
         }
-        public Task<HttpResponseMessage> ProcessPayment()
-        {
-            var json = JsonSerializer.Serialize(
-                                    new PaymentRequest
-                                    {
-                                        amount = To12Digits(USERDATA),
-                                        processing_code = "000200",
-                                        transaction_id = Unique_Code(),
-                                        desc = "Mobile Money Payment Test",
-                                        merchant_id = "TTM-00005781",
-                                        subscriber_number = MSISDN,
-                                        r_switch = NETWORK
-                                    });
-            HttpContent content = new StringContent(json, Encoding.UTF8, "application/json");
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", 
-                Convert.ToBase64String(Encoding.UTF8.GetBytes("vag60e5c12178f1f:ZGNlNDY2ODRlNmUzODRlZTQ4MTMxZTdkYWZiZjNlZDI=")));
-            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
+        //public Task<HttpResponseMessage> ProcessPayment()
+        //{
+        //    var json = JsonSerializer.Serialize(
+        //                            new PaymentRequest
+        //                            {
+        //                                amount = To12Digits(USERDATA),
+        //                                processing_code = "000200",
+        //                                transaction_id = Unique_Code(),
+        //                                desc = "Mobile Money Payment Test",
+        //                                merchant_id = "TTM-00005781",
+        //                                subscriber_number = MSISDN,
+        //                                r_switch = NETWORK
+        //                            });
+        //    HttpContent content = new StringContent(json, Encoding.UTF8, "application/json");
+        //    var client = new HttpClient();
+        //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+        //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //    //client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json;");// charset=utf-8
+        //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", 
+        //        Convert.ToBase64String(Encoding.UTF8.GetBytes("vag60e5c12178f1f:ZGNlNDY2ODRlNmUzODRlZTQ4MTMxZTdkYWZiZjNlZDI=")));
+        //    client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
             
-            return client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
+        //    return client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
+        //}
+
+        public IRestResponse ProcessPayment()
+        {
+            var client = new RestClient("https://test.theteller.net/v1.1/transaction/process");
+            client.Timeout = -1;
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpaR05sTkRZMk9EUmxObVV6T0RSbFpUUTRNVE14WlRka1lXWmlaak5sWkRJPQ==");
+            request.AddHeader("Content-Type", "application/json");
+            var body = JsonSerializer.Serialize(
+                                        new PaymentRequest
+                                        {
+                                            amount = To12Digits(USERDATA),
+                                            processing_code = "000200",
+                                            transaction_id = Unique_Code(),
+                                            desc = "Mobile Money Payment Test",
+                                            merchant_id = "TTM-00005781",
+                                            subscriber_number = MSISDN,
+                                            r_switch = NETWORK
+                                        });
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
+            return client.Execute(request);
         }
 
         private string Unique_Code()
