@@ -100,10 +100,10 @@ namespace ObririUssd.Services
                     Options.TryGetValue(mainMenuItem, out string optionName);
                     var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
 
-                    return await ProcessFinalState(request,request.NETWORK, m.Option, state.SelectedValues);
+                    return await ProcessFinalState(request,m.Message, m.Option, state.SelectedValues);
                 }
                 PreviousState.TryRemove(request.MSISDN, out UserState _);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, request.NETWORK, false);
+                return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
             }
 
             else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
