@@ -94,7 +94,7 @@ namespace ObririUssd.Models
            if (network.ToUpper().Equals("MTN")) return "MTN";
            if (network.ToUpper().Equals("AIRTELTIGO")) return "ATL";
            if (network.ToUpper().Equals("Tigo")) return "TGO";
-           if (network.ToUpper().Contains("VODAFONE")) return "VDF";
+           if (network.ToUpper().Equals("VODAFONE")) return "VDF";
             return "";
         }
 
