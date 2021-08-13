@@ -91,6 +91,14 @@ namespace ObririUssd.Services
                         MSGTYPE = true
                     };
                 }
+                if (float.Parse(request.USERDATA) < 10) 
+                {
+                    PreviousState.TryRemove(request.MSISDN, out UserState userState);
+                    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
+                    PreviousState.TryAdd(request.MSISDN, state);
+                    return UssdResponse.CreateResponse(userid, "Transaction amount below GHS 10.00 are not allowed", request.NETWORK, true);
+                }
+                   
                 var response = await request.ProcessPayment();
 
                 var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
