@@ -82,7 +82,8 @@ namespace ObririUssd.Models
                                             desc = "Mobile Money Payment Test",
                                             merchant_id = "TTM-00005781",
                                             subscriber_number = MSISDN,
-                                            r_switch = GetNetwork(NETWORK)
+                                            r_switch = GetNetwork(NETWORK),
+                                            voucher_code = Unique_Code()
                                         });
             request.AddParameter("application/json", body, ParameterType.RequestBody);
             return client.ExecuteAsync(request);
