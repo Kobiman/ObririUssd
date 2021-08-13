@@ -91,10 +91,10 @@ namespace ObririUssd.Models
         private string GetNetwork(string network)
         {
            if (network.ToUpper().Equals("MTN")) return "MTN";
-           if (network.ToUpper().Equals("Airtel")) return "ATL";
+           if (network.ToUpper().Equals("AIRTELTIGO")) return "ATL";
            if (network.ToUpper().Equals("Tigo")) return "TGO";
            if (network.ToUpper().Equals("Vodafone")) return "VDF";
-            return "VDF";
+            return "";
         }
 
         private string Unique_Code()
