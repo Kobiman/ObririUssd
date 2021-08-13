@@ -96,7 +96,7 @@ namespace ObririUssd.Services
                     PreviousState.TryRemove(request.MSISDN, out UserState userState);
                     var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
                     PreviousState.TryAdd(request.MSISDN, state);
-                    return UssdResponse.CreateResponse(userid, "Transaction amount below GHS 10.00 are not allowed", request.NETWORK, true);
+                    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
                 }
                    
                 var response = await request.ProcessPayment();
