@@ -66,7 +66,7 @@ namespace ObririUssd.Models
         //    return client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
         //}
 
-        public IRestResponse ProcessPayment()
+        public Task<IRestResponse> ProcessPayment()
         {
             var client = new RestClient("https://test.theteller.net/v1.1/transaction/process");
             client.Timeout = -1;
@@ -85,7 +85,7 @@ namespace ObririUssd.Models
                                             r_switch = NETWORK
                                         });
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            return client.Execute(request);
+            return client.ExecuteAsync(request);
         }
 
         private string Unique_Code()

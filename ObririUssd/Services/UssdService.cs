@@ -57,15 +57,7 @@ namespace ObririUssd.Services
             {
                 if (int.TryParse(state?.PreviousData, out int previousData))
                 {
-                    //if (previousData.Equals(1))
-                    //{
-                    //    if (previousData.Equals(request.USERDATA.Length) && request.ValidateInputFormat() && request.ValidateInputRange(91,1))
-                    //       return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
-                    //    PreviousState.TryRemove(request.MSISDN, out UserState userState);
-                    //    var state = userState with { CurrentState = userState.CurrentState.Substring(0, userState.CurrentState.Length - 1) };
-                    //    PreviousState.TryAdd(request.MSISDN, state);
-                    //    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} number from (1-90).", true);
-                    //}
+
                     if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1))
                     {
                         PreviousState.TryRemove(request.MSISDN, out UserState t);
@@ -99,12 +91,9 @@ namespace ObririUssd.Services
                         MSGTYPE = true
                     };
                 }
-                var response = request.ProcessPayment();
+                var response = await request.ProcessPayment();
 
-                //if(response.IsSuccessStatusCode)//(true)
-                //{
-                //    string jsonResponse = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
+                var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
                 if (result.status == "approved")//(true)
                 {
                     var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
@@ -115,14 +104,6 @@ namespace ObririUssd.Services
                 }
                 PreviousState.TryRemove(request.MSISDN, out UserState _);
                 return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
-                //}
-                //else
-                //{
-                //    string jsonResponse = await response.Content.ReadAsStringAsync();
-                //    var result = JsonSerializer.Deserialize<PaymentResponse>(jsonResponse);
-                //    PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                //    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
-                //}
             }
 
             else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
