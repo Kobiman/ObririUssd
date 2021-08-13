@@ -82,10 +82,19 @@ namespace ObririUssd.Models
                                             desc = "Mobile Money Payment Test",
                                             merchant_id = "TTM-00005781",
                                             subscriber_number = MSISDN,
-                                            r_switch = NETWORK
+                                            r_switch = GetNetwork(NETWORK)
                                         });
             request.AddParameter("application/json", body, ParameterType.RequestBody);
             return client.ExecuteAsync(request);
+        }
+
+        private string GetNetwork(string network)
+        {
+           if (network.ToUpper().Equals("MTN")) return "MTN";
+           if (network.ToUpper().Equals("Airtel")) return "ATL";
+           if (network.ToUpper().Equals("Tigo")) return "TGO";
+           if (network.ToUpper().Equals("Vodafone")) return "VDF";
+            return "VDF";
         }
 
         private string Unique_Code()
