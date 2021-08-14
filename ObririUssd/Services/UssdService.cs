@@ -19,7 +19,7 @@ namespace ObririUssd.Services
         static ConcurrentDictionary<string, UserState> PreviousState = _previousState ?? new ConcurrentDictionary<string, UserState>();
         Dictionary<string, string> Options = new Dictionary<string, string>
         {
-            { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI FRIDAY" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
+            { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI SPECIAL" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
         };
         Dictionary<string, string> DaysOfTheWeek = new Dictionary<string, string>
         {
