@@ -58,7 +58,7 @@ namespace ObririUssd.Services
                 if (int.TryParse(state?.PreviousData, out int previousData))
                 {
 
-                    if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1))
+                    if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                     {
                         PreviousState.TryRemove(request.MSISDN, out UserState t);
                         var state = t with { SelectedValues = request.USERDATA };

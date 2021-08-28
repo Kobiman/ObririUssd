@@ -41,6 +41,12 @@ namespace ObririUssd.Models
             }
             return value;
         }
+        public bool HasDuplicate()
+        {
+            var temp = USERDATA.Split(" ");
+            if (temp.Distinct().Count().Equals(temp.Length)) return false;
+            return true;
+        }
         //public Task<HttpResponseMessage> ProcessPayment()
         //{
         //    var json = JsonSerializer.Serialize(
@@ -62,7 +68,7 @@ namespace ObririUssd.Models
         //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", 
         //        Convert.ToBase64String(Encoding.UTF8.GetBytes("vag60e5c12178f1f:ZGNlNDY2ODRlNmUzODRlZTQ4MTMxZTdkYWZiZjNlZDI=")));
         //    client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
-            
+
         //    return client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
         //}
 
