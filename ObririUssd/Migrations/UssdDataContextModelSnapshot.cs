@@ -71,6 +71,9 @@ namespace ObririUssd.Migrations
                     b.Property<float>("Amount")
                         .HasColumnType("real");
 
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OptionName")
                         .HasColumnType("nvarchar(max)");
 

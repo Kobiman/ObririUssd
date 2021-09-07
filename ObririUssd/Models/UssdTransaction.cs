@@ -19,6 +19,8 @@ namespace ObririUssd.Models
 
         public bool Proccessed { get; set; }
 
+        public string ApprovedBy { get; set; }
+
         public DateTime TransactionDate { get; set; } = DateTime.Now;
     }
 }
