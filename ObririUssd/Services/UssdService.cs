@@ -36,6 +36,8 @@ namespace ObririUssd.Services
         public async Task<UssdResponse> ProcessRequest(UssdRequest request)
         {
             var duration = await _context.UssdLock.FirstOrDefaultAsync();
+            if(duration.Disabled)
+                return UssdResponse.CreateResponse(userid, request.MSISDN, "Sorry Draw is closed", false);
             if (duration is not null && duration.DrawHasEnded())
                 return UssdResponse.CreateResponse(userid, request.MSISDN, "Sorry Draw Has Ended", false);
             IncreaseState(request);
@@ -224,7 +226,7 @@ namespace ObririUssd.Services
             _context.Add(transaction);
             await _context.SaveChangesAsync();
 
-            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id}");
+            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id} {DateTime.Today}");
             PreviousState.TryRemove(request.MSISDN, out UserState _);
 
             return new UssdResponse
