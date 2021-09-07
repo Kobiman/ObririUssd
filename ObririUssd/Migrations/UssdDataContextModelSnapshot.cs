@@ -86,6 +86,9 @@ namespace ObririUssd.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Proccessed")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
 
