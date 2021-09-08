@@ -223,11 +223,11 @@ namespace ObririUssd.Services
                 OptionValue = optionValue,
                 PhoneNumber = request.MSISDN
             };
-            transaction.Message = $"{message}:{transaction.Id} {DateTime.Today}";
+            transaction.Message = $"{message}:{transaction.Id} {DateTime.Now}";
             _context.Add(transaction);
             await _context.SaveChangesAsync();
 
-            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id} {DateTime.Today}");
+            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id} {DateTime.Now}");
             PreviousState.TryRemove(request.MSISDN, out UserState _);
 
             return new UssdResponse

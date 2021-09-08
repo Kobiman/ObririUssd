@@ -8,6 +8,8 @@ namespace ObririUssd.Models
     public class UssdTransaction
     {
         public int Id { get; set; }
+
+        public int TSN { get; set; }
         public string PhoneNumber { get; set; }
         public string OptionName { get; set; }
         public string OptionValue { get; set; }

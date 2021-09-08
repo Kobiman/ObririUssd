@@ -77,6 +77,9 @@ namespace ObririUssd.Migrations
                     b.Property<string>("ApprovedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OptionName")
                         .HasColumnType("nvarchar(max)");
 
@@ -91,6 +94,12 @@ namespace ObririUssd.Migrations
 
                     b.Property<bool>("Proccessed")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TSN")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
