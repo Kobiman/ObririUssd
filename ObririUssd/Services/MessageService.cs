@@ -12,7 +12,8 @@ namespace ObririUssd.Services
         public async Task SendSms(string contact, string message)
         {
             var _contact = new string(contact.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
-            var endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={_contact}&msg={message}&sender_id=VAG-OBIRI-LOTTERIES";
+            //var _endPoint = $"https://apps.mnotify.net/smsapi?key=TOdkRPCFwgfCbusbKpMqyYnSn&to={_contact}&msg={message}&sender_id=VAG-OBIRI-LOTTERIES";
+            var endPoint = $"https://smsc.hubtel.com/v1/messages/send?clientsecret=rtbdbfpw&clientid=ztbaebgs&from=0249691353&to={_contact}&content={message}";
             using HttpClient client = new HttpClient();
             var response = await client.GetAsync(endPoint);
         }
