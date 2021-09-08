@@ -223,6 +223,7 @@ namespace ObririUssd.Services
                 OptionValue = optionValue,
                 PhoneNumber = request.MSISDN
             };
+            transaction.Message = $"{message}:{transaction.Id} {DateTime.Today}";
             _context.Add(transaction);
             await _context.SaveChangesAsync();
 
