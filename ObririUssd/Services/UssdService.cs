@@ -25,6 +25,20 @@ namespace ObririUssd.Services
         {
             { "Monday", "1" },{ "Tuesday", "2" },{ "Wednesday", "3" },{ "Thursday", "4" },{ "Friday", "5" },{ "Saturday", "6" },{ "Sunday", "7" }
         };
+        Dictionary<string, string> OptionsOfTheWeek = new Dictionary<string, string>
+        {
+            { "1", "1. Mon.-PIONEER\n2. Mon.-SPECIAL" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI SPECIAL" },{ "6", "1. Sat.-OLD SOLDIER\n2. Sat.-NATIONAL" },{ "7", "SUNDAY\n1. SUN.-SPECIAL" }
+        };
+        Dictionary<string, Dictionary<string, string>> OptionsOfTheDay = new Dictionary<string, Dictionary<string, string>>
+        {
+            //{ "1", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Mon.-PIONEER" }, new OptionOfTheDay { Id = "2", Name = "Mon.-SPECIAL" } } },
+            //{ "2", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Tue.-VAG EAST" }, new OptionOfTheDay { Id = "2", Name = "Tue.-LUCKY" } } },
+            //{ "3", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Wed.-VAG WEST" }, new OptionOfTheDay { Id = "2", Name = "Wed.-MIDWEEK" } } },
+            //{ "4", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Thur.-AFRICAN LOTTO" }, new OptionOfTheDay { Id = "2", Name = "Thur.-FORTUNE" } } },
+            //{ "5", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Fri.-OBIRI SPECIAL" }, new OptionOfTheDay { Id = "2", Name = "Fri.-BONANZA" } } },
+            { "6", new Dictionary<string, string>{{ "1", "Sat.-OLD SOLDIER" },{ "2", "Sat.-NATIONAL" }}},
+            { "7", new Dictionary<string, string>{{ "1", "Sun.-SPECIAL" }}}
+        };
         private UserState state = null;
         private string userid = "WEB_MATE";
         private UssdDataContext _context;
@@ -36,10 +50,18 @@ namespace ObririUssd.Services
         public async Task<UssdResponse> ProcessRequest(UssdRequest request)
         {
             var duration = await _context.UssdLock.FirstOrDefaultAsync();
-            if(duration.Disabled)
+            if (duration.Disabled)
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState _);
                 return UssdResponse.CreateResponse(userid, request.MSISDN, "Sorry Draw is closed", false);
+            }
+
             if (duration is not null && duration.DrawHasEnded())
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState _);
                 return UssdResponse.CreateResponse(userid, request.MSISDN, "Sorry Draw Has Ended", false);
+            }
+
             IncreaseState(request);
 
             if (state?.CurrentState?.Length == 1 && string.IsNullOrWhiteSpace(request.USERDATA))
@@ -54,69 +76,8 @@ namespace ObririUssd.Services
                 Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
                 return ProcessMenu(request, $"{option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
             }
-            
+
             if (state?.CurrentState?.Length == 2)
-            {
-                if (int.TryParse(state?.PreviousData, out int previousData))
-                {
-
-                    if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
-                    {
-                        PreviousState.TryRemove(request.MSISDN, out UserState t);
-                        var state = t with { SelectedValues = request.USERDATA };
-                        PreviousState.TryAdd(request.MSISDN, state);
-                        return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
-                    }
-                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                    var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
-                    PreviousState.TryAdd(request.MSISDN, _state);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} number(s) from (1-90). \n Separate each number with a space ", true);
-                }
-            }
-            if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.USERDATA))
-            {
-                PreviousState.TryRemove(request.MSISDN, out UserState userState);
-                var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
-                PreviousState.TryAdd(request.MSISDN, state);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {state?.PreviousData} number(s) from (1-90). \n Separate each number with a space ", true);
-            }
-            else if (state?.CurrentState?.Length == 3)
-            {
-                if (!int.TryParse(request.USERDATA, out int r))
-                {
-                    DecreaseState(request);
-                    return new UssdResponse
-                    {
-                        USERID = userid,
-                        MSISDN = request.MSISDN,
-                        MSG = "Input value is not in the rigth format",
-                        MSGTYPE = true
-                    };
-                }
-                if (float.Parse(request.USERDATA) < 10) 
-                {
-                    PreviousState.TryRemove(request.MSISDN, out UserState userState);
-                    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
-                    PreviousState.TryAdd(request.MSISDN, state);
-                    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
-                }
-                   
-                var response = await request.ProcessPayment();
-
-                var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
-                if (result.status == "approved")//(true)
-                {
-                    var mainMenuItem = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
-                    Options.TryGetValue(mainMenuItem, out string optionName);
-                    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
-
-                    return await ProcessFinalState(request,m.Message, m.Option, state.SelectedValues);
-                }
-                PreviousState.TryRemove(request.MSISDN, out UserState _);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
-            }
-
-            else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
             {
                 var day = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
                 Options.TryGetValue(day, out string option);
@@ -135,9 +96,76 @@ namespace ObririUssd.Services
                 var message = GetSubmenus(key, option, request.USERDATA);
                 return ProcessSubMenu(request, message);
             }
+            if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.USERDATA))
+            {
+                PreviousState.TryRemove(request.MSISDN, out UserState userState);
+                var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
+                PreviousState.TryAdd(request.MSISDN, state);
+                return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {state?.PreviousData} number(s) from (1-90). \n Separate each number with a space ", true);
+            }
+            else if (state?.CurrentState?.Length == 3)
+            {
+                if (int.TryParse(state?.PreviousData, out int previousData))
+                {
 
-            Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
-            return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+                    if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                    {
+                        PreviousState.TryRemove(request.MSISDN, out UserState t);
+                        var state = t with { SelectedValues = request.USERDATA };
+                        PreviousState.TryAdd(request.MSISDN, state);
+                        return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                    }
+                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                    var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
+                    PreviousState.TryAdd(request.MSISDN, _state);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} number(s) from (1-90). \n Separate each number with a space ", true);
+                }
+            }
+            else if (state?.CurrentState?.Length == 4)
+            {
+                if (!int.TryParse(request.USERDATA, out int r))
+                {
+                    DecreaseState(request);
+                    return new UssdResponse
+                    {
+                        USERID = userid,
+                        MSISDN = request.MSISDN,
+                        MSG = "Input value is not in the rigth format",
+                        MSGTYPE = true
+                    };
+                }
+                if (float.Parse(request.USERDATA) < 10)
+                {
+                    PreviousState.TryRemove(request.MSISDN, out UserState userState);
+                    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
+                    PreviousState.TryAdd(request.MSISDN, state);
+                    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
+                }
+
+                var response = await request.ProcessPayment();
+
+                //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
+                if (response.Content.Contains("approved"))  //(true)
+                {
+                    var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+                    mainMenuItem.TryGetValue(state.UserOption, out string optionName);
+                    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+
+                    return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
+                }
+                PreviousState.TryRemove(request.MSISDN, out UserState _);
+                return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+            }
+            else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
+            {
+
+                var r = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+                return ProcessMenu(request, $"{r[request.USERDATA]}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+            }
+            var _option = OptionsOfTheWeek[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+            return ProcessMenu(request, $"{_option}");
+            //Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
+            // return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
         }
 
         private void DecreaseState(UssdRequest request)
@@ -229,6 +257,7 @@ namespace ObririUssd.Services
             savedTransaction.Message = $"{message}:{transaction.Id} {DateTime.Now}";
             savedTransaction.Status = true;
             await _context.SaveChangesAsync();
+
             await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id} {DateTime.Now}");
             PreviousState.TryRemove(request.MSISDN, out UserState _);
 
@@ -243,15 +272,24 @@ namespace ObririUssd.Services
 
         private UssdResponse ProcessSubMenu(UssdRequest request, string message)
         {
-            var _state = new UserState { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
+            var _state = tt with { CurrentState = state.CurrentState, PreviousData = request.USERDATA };
             PreviousState.TryAdd(request.MSISDN, _state);
             return UssdResponse.CreateResponse(userid, request.MSISDN, message, true);
         }
 
         private UssdResponse ProcessMenu(UssdRequest request, string message)
         {
-            var _state = new UserState { CurrentState = "", PreviousData = request.USERDATA };
+            UserState _state;
+            PreviousState.TryRemove(request.MSISDN, out UserState s);
+            if(s is null)
+            {
+                _state = new UserState { UserOption = request.USERDATA, CurrentState = "", PreviousData = request.USERDATA };
+            }
+            else
+            {
+                _state = s with { UserOption = request.USERDATA, PreviousData = request.USERDATA };
+            } 
             PreviousState.TryAdd(request.MSISDN, _state);
             return UssdResponse.CreateResponse(userid, request.MSISDN, message, true);
         }

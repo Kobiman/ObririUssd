@@ -18,11 +18,8 @@ namespace ObririUssd.Models
         public bool Win { get; set; }
         
         public bool PaymentStatus { get; set; }
-
-        public bool Proccessed { get; set; }
-
         public string ApprovedBy { get; set; }
-
+        public bool Proccessed { get; set; }
         public DateTime TransactionDate { get; set; } = DateTime.Now;
         public string Message { get; set; }
         public bool Status { get; set; }
