@@ -31,11 +31,11 @@ namespace ObririUssd.Services
         };
         Dictionary<string, Dictionary<string, string>> OptionsOfTheDay = new Dictionary<string, Dictionary<string, string>>
         {
-            //{ "1", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Mon.-PIONEER" }, new OptionOfTheDay { Id = "2", Name = "Mon.-SPECIAL" } } },
-            //{ "2", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Tue.-VAG EAST" }, new OptionOfTheDay { Id = "2", Name = "Tue.-LUCKY" } } },
-            //{ "3", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Wed.-VAG WEST" }, new OptionOfTheDay { Id = "2", Name = "Wed.-MIDWEEK" } } },
-            //{ "4", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Thur.-AFRICAN LOTTO" }, new OptionOfTheDay { Id = "2", Name = "Thur.-FORTUNE" } } },
-            //{ "5", new OptionOfTheDay[]{ new OptionOfTheDay { Id = "1", Name = "Fri.-OBIRI SPECIAL" }, new OptionOfTheDay { Id = "2", Name = "Fri.-BONANZA" } } },
+            { "1", new Dictionary<string, string>{{ "1", "Mon.-PIONEER" },{ "2", "Mon.-SPECIAL" }}},
+            { "2", new Dictionary<string, string>{{ "1", "Tue.-VAG EAST" },{ "2", "Tue.-LUCKY" }}},
+            { "3", new Dictionary<string, string>{{ "1", "Wed.-VAG WEST" },{ "2", "Wed.-MIDWEEK" }}},
+            { "4", new Dictionary<string, string>{{ "1", "Thur.-AFRICAN LOTTO" },{ "2", "Thur.-FORTUNE" }}},
+            { "5", new Dictionary<string, string>{{ "1", "Fri.-OBIRI SPECIAL" },{ "2", "Fri.-BONANZA" }}},
             { "6", new Dictionary<string, string>{{ "1", "Sat.-OLD SOLDIER" },{ "2", "Sat.-NATIONAL" }}},
             { "7", new Dictionary<string, string>{{ "1", "Sun.-SPECIAL" }}}
         };
@@ -101,7 +101,7 @@ namespace ObririUssd.Services
                 PreviousState.TryRemove(request.MSISDN, out UserState userState);
                 var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
                 PreviousState.TryAdd(request.MSISDN, state);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {state?.PreviousData} number(s) from (1-90). \n Separate each number with a space ", true);
+                return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {state?.PreviousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
             }
             else if (state?.CurrentState?.Length == 3)
             {
@@ -118,7 +118,7 @@ namespace ObririUssd.Services
                     PreviousState.TryRemove(request.MSISDN, out UserState tt);
                     var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
                     PreviousState.TryAdd(request.MSISDN, _state);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} number(s) from (1-90). \n Separate each number with a space ", true);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
                 }
             }
             else if (state?.CurrentState?.Length == 4)
@@ -159,8 +159,14 @@ namespace ObririUssd.Services
             else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
             {
 
-                var r = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
-                return ProcessMenu(request, $"{r[request.USERDATA]}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+                OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]].TryGetValue(request.USERDATA,out string optionsOfTheDay);
+                if(optionsOfTheDay is null)
+                {
+                    DecreaseState(request);
+                    var _opt = OptionsOfTheWeek[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+                    return ProcessMenu(request, $"{_opt}");
+                }
+                return ProcessMenu(request, $"{optionsOfTheDay}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
             }
             var _option = OptionsOfTheWeek[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
             return ProcessMenu(request, $"{_option}");
@@ -208,7 +214,7 @@ namespace ObririUssd.Services
                 case "66":
                 case "67":
                     //case "7171":
-                    return $"{option}\n6.Perm - 2 \nEnter 3 number(s) from (1-90)";
+                    return $"{option}\n6.Perm - 2 \nEnter 3 distinct number(s) from (1-90)";
 
                 //option 7
                 case "71":
@@ -219,12 +225,12 @@ namespace ObririUssd.Services
                 case "76":
                 case "77":
                     //case "7171":
-                    return $"{option}\n7.Perm - 3 \nEnter 4 number(s) from (1-90)";
+                    return $"{option}\n7.Perm - 3 \nEnter 4 distinct number(s) from (1-90)";
 
 
 
             }
-            return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} number(s) from (1-90).\n Separate each number with a space ";
+            return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} distinct number(s) from (1-90).\n Separate each number with a space ";
         }
 
         private MessageType GetFinalStates(string previousValue, string optionName, string amount)
