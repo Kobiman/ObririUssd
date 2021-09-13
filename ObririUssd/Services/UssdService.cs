@@ -145,7 +145,7 @@ namespace ObririUssd.Services
                 var response = await request.ProcessPayment();
 
                 //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
-                if (response.Content.Contains("approved"))  //(true)
+                if (true) //(response.Content.Contains("approved"))
                 {
                     var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
                     mainMenuItem.TryGetValue(state.UserOption, out string optionName);
