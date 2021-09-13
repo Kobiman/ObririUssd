@@ -79,8 +79,8 @@ namespace ObririUssd.Services
 
             if (state?.CurrentState?.Length == 2)
             {
-                var day = DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()];
-                Options.TryGetValue(day, out string option);
+                OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]].TryGetValue(state.UserOption, out string optionsOfTheDay);
+
                 if (!request.ValidateInputFormat())
                 {
                     DecreaseState(request);
@@ -93,7 +93,7 @@ namespace ObririUssd.Services
                     return UssdResponse.CreateResponse(userid, request.MSISDN, $"Enter value between {2} - {7}", true);
                 }
                 var key = request.USERDATA + state.CurrentState;
-                var message = GetSubmenus(key, option, request.USERDATA);
+                var message = GetSubmenus(key, optionsOfTheDay, request.USERDATA);
                 return ProcessSubMenu(request, message);
             }
             if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.USERDATA))
