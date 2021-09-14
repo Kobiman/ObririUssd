@@ -17,27 +17,27 @@ namespace ObririUssd.Services
     {
         static ConcurrentDictionary<string, UserState> _previousState;
         static ConcurrentDictionary<string, UserState> PreviousState = _previousState ?? new ConcurrentDictionary<string, UserState>();
-        Dictionary<string, string> Options = new Dictionary<string, string>
-        {
-            { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI SPECIAL" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
-        };
+        //Dictionary<string, string> Options = new Dictionary<string, string>
+        //{
+        //    { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI SPECIAL" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
+        //};
         Dictionary<string, string> DaysOfTheWeek = new Dictionary<string, string>
         {
             { "Monday", "1" },{ "Tuesday", "2" },{ "Wednesday", "3" },{ "Thursday", "4" },{ "Friday", "5" },{ "Saturday", "6" },{ "Sunday", "7" }
         };
         Dictionary<string, string> OptionsOfTheWeek = new Dictionary<string, string>
         {
-            { "1", "1. Mon.-PIONEER\n2. Mon.-SPECIAL" },{ "2", "1. Tue.-VAG EAST\n2. Tue.-LUCKY" },{ "3", "1. Wed.-VAG WEST\n 2. Wed.-MIDWEEK" },{ "4", "1. Thur.-AFRICAN LOTTO\n2. Thur.-FORTUNE" },{ "5", "1. Fri.-OBIRI SPECIAL\n2. Fri.-BONANZA" },{ "6", "1. Sat.-OLD SOLDIER\n2. Sat.-NATIONAL" },{ "7", "SUNDAY\n1. SUN.-SPECIAL" }
+            { "1", "1. PIONEER\n2. MONDAY SPECIAL" },{ "2", "1. VAG EAST\n2. LUCKY TUESDAY" },{ "3", "1. VAG WEST\n 2. MID-WEEK" },{ "4", "1. AFRICAN LOTTO\n2. FORTUNE THURSDAY" },{ "5", "1. OBIRI SPECIAL\n2. FRIDAY BONANZA" },{ "6", "1. OLD SOLDIER\n2. NATIONAL" },{ "7", "1. SUNDAY SPECIAL" }
         };
         Dictionary<string, Dictionary<string, string>> OptionsOfTheDay = new Dictionary<string, Dictionary<string, string>>
         {
-            { "1", new Dictionary<string, string>{{ "1", "Mon.-PIONEER" },{ "2", "Mon.-SPECIAL" }}},
-            { "2", new Dictionary<string, string>{{ "1", "Tue.-VAG EAST" },{ "2", "Tue.-LUCKY" }}},
-            { "3", new Dictionary<string, string>{{ "1", "Wed.-VAG WEST" },{ "2", "Wed.-MIDWEEK" }}},
-            { "4", new Dictionary<string, string>{{ "1", "Thur.-AFRICAN LOTTO" },{ "2", "Thur.-FORTUNE" }}},
-            { "5", new Dictionary<string, string>{{ "1", "Fri.-OBIRI SPECIAL" },{ "2", "Fri.-BONANZA" }}},
-            { "6", new Dictionary<string, string>{{ "1", "Sat.-OLD SOLDIER" },{ "2", "Sat.-NATIONAL" }}},
-            { "7", new Dictionary<string, string>{{ "1", "Sun.-SPECIAL" }}}
+            { "1", new Dictionary<string, string>{{ "1", "PIONEER" },{ "2", "MONDAY SPECIAL" }}},
+            { "2", new Dictionary<string, string>{{ "1", "VAG EAST" },{ "2", "LUCKY TUESDAY" }}},
+            { "3", new Dictionary<string, string>{{ "1", "VAG WEST" },{ "2", "MID-WEEK" }}},
+            { "4", new Dictionary<string, string>{{ "1", "AFRICAN LOTTO" },{ "2", "FORTUNE THURSDAY" }}},
+            { "5", new Dictionary<string, string>{{ "1", "OBIRI SPECIAL" },{ "2", "FRIDAY BONANZA" }}},
+            { "6", new Dictionary<string, string>{{ "1", "OLD SOLDIER" },{ "2", "NATIONAL" }}},
+            { "7", new Dictionary<string, string>{{ "1", "SUNDAY SPECIAL" }}}
         };
         private UserState state = null;
         private string userid = "WEB_MATE";
@@ -73,7 +73,7 @@ namespace ObririUssd.Services
                     PreviousState.TryAdd(request.MSISDN, _state);
                     PreviousState.TryGetValue(request.MSISDN, out state);
                 }
-                Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
+                OptionsOfTheWeek.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
                 return ProcessMenu(request, $"{option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
             }
 
@@ -158,18 +158,19 @@ namespace ObririUssd.Services
             }
             else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
             {
-
-                OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]].TryGetValue(request.USERDATA,out string optionsOfTheDay);
+                var dayOfWeek = DateTime.Now.DayOfWeek.ToString();
+                OptionsOfTheDay[DaysOfTheWeek[dayOfWeek]].TryGetValue(request.USERDATA,out string optionsOfTheDay);
                 if(optionsOfTheDay is null)
                 {
                     DecreaseState(request);
-                    var _opt = OptionsOfTheWeek[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+                    var _opt = OptionsOfTheWeek[DaysOfTheWeek[dayOfWeek]];
                     return ProcessMenu(request, $"{_opt}");
                 }
                 return ProcessMenu(request, $"{optionsOfTheDay}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
             }
-            var _option = OptionsOfTheWeek[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
-            return ProcessMenu(request, $"{_option}");
+            var day = DateTime.Now.DayOfWeek.ToString();
+            var _option = OptionsOfTheWeek[DaysOfTheWeek[day]];
+            return ProcessMenu(request, $"{day}\n{_option}");
             //Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
             // return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
         }
@@ -264,7 +265,7 @@ namespace ObririUssd.Services
             savedTransaction.Status = true;
             await _context.SaveChangesAsync();
 
-            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id} {DateTime.Now}");
+            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id}. Selected values {optionValue}\n{DateTime.Now}");
             PreviousState.TryRemove(request.MSISDN, out UserState _);
 
             return new UssdResponse
