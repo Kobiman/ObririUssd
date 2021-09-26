@@ -72,7 +72,7 @@ namespace ObririUssd.Models
         //    return client.PostAsync("https://test.theteller.net/v1.1/transaction/process", content);
         //}
 
-        public Task<IRestResponse> ProcessPayment()
+        public Task<IRestResponse> ProcessPayment(string amount)
         {
             var client = new RestClient("https://test.theteller.net/v1.1/transaction/process");
             client.Timeout = -1;
@@ -82,7 +82,7 @@ namespace ObririUssd.Models
             var body = JsonSerializer.Serialize(
                                         new PaymentRequest
                                         {
-                                            amount = To12Digits(USERDATA),
+                                            amount = To12Digits(amount),
                                             processing_code = "000200",
                                             transaction_id = Unique_Code(),
                                             desc = "Mobile Money Payment Test",

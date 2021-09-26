@@ -92,8 +92,8 @@ namespace ObririUssd.Services
                     DecreaseState(request);
                     return UssdResponse.CreateResponse(userid, request.MSISDN, $"Enter value between {2} - {7}", true);
                 }
-                var key = request.USERDATA + state.CurrentState;
-                var message = GetSubmenus(key, optionsOfTheDay, request.USERDATA);
+                //var key = request.USERDATA + state.CurrentState;
+                var message = GetSubmenus(optionsOfTheDay, request.USERDATA);
                 return ProcessSubMenu(request, message);
             }
             if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.USERDATA))
@@ -107,14 +107,37 @@ namespace ObririUssd.Services
             {
                 if (int.TryParse(state?.PreviousData, out int previousData))
                 {
-
-                    if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                    if (previousData.Equals(7))
                     {
-                        PreviousState.TryRemove(request.MSISDN, out UserState t);
-                        var state = t with { SelectedValues = request.USERDATA };
-                        PreviousState.TryAdd(request.MSISDN, state);
-                        return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                        if (4.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                        {
+                            PreviousState.TryRemove(request.MSISDN, out UserState t);
+                            var state = t with { SelectedValues = request.USERDATA };
+                            PreviousState.TryAdd(request.MSISDN, state);
+                            return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                        }
                     }
+                    if (previousData.Equals(6))
+                    {
+                        if (3.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                        {
+                            PreviousState.TryRemove(request.MSISDN, out UserState t);
+                            var state = t with { SelectedValues = request.USERDATA };
+                            PreviousState.TryAdd(request.MSISDN, state);
+                            return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                        }
+                    }
+                    else
+                    {
+                        if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                        {
+                            PreviousState.TryRemove(request.MSISDN, out UserState t);
+                            var state = t with { SelectedValues = request.USERDATA };
+                            PreviousState.TryAdd(request.MSISDN, state);
+                            return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                        }
+                    }
+                    
                     PreviousState.TryRemove(request.MSISDN, out UserState tt);
                     var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
                     PreviousState.TryAdd(request.MSISDN, _state);
@@ -142,14 +165,16 @@ namespace ObririUssd.Services
                     return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
                 }
 
-                var response = await request.ProcessPayment();
+                var amount = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * state.SelectedValues.Split(" ").Length).ToString() : request.USERDATA;
+
+                var response = await request.ProcessPayment(amount);
 
                 //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
-                if (true) //(response.Content.Contains("approved"))
+                if (response.Content.Contains("approved")) //(true)
                 {
                     var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
                     mainMenuItem.TryGetValue(state.UserOption, out string optionName);
-                    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+                    var m = GetFinalStates(state.PreviousData, optionName, amount);
 
                     return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
                 }
@@ -193,9 +218,9 @@ namespace ObririUssd.Services
             }
         }
 
-        private string GetSubmenus(string key, string optionValve, string option)
+        private string GetSubmenus(string optionValve, string option)
         {
-            switch (key)
+            switch (option)
             {
                 //Userdata+CurrentState
                 case "11":
@@ -207,24 +232,26 @@ namespace ObririUssd.Services
                 case "17":
                     return $"{option}\n1.Direct-1\nEnter 1 number(s) from (1-90)";
                 //option 6
-                case "61":
-                case "62":
-                case "63":
-                case "64":
-                case "65":
-                case "66":
-                case "67":
+                //case "61":
+                //case "62":
+                //case "63":
+                //case "64":
+                //case "65":
+                //case "66":
+                //case "67":
+                case "6":
                     //case "7171":
                     return $"{option}\n6.Perm - 2 \nEnter 3 distinct number(s) from (1-90)";
 
                 //option 7
-                case "71":
-                case "72":
-                case "73":
-                case "74":
-                case "75":
-                case "76":
-                case "77":
+                //case "71":
+                //case "72":
+                //case "73":
+                //case "74":
+                //case "75":
+                //case "76":
+                //case "77":
+                case "7":
                     //case "7171":
                     return $"{option}\n7.Perm - 3 \nEnter 4 distinct number(s) from (1-90)";
 
