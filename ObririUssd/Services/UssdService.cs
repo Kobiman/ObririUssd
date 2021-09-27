@@ -109,7 +109,7 @@ namespace ObririUssd.Services
                 {
                     if (previousData.Equals(7))//Perm 3
                     {
-                        if (4.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                        if (request.USERDATA.Split(" ").Length <= 4 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                         {
                             PreviousState.TryRemove(request.MSISDN, out UserState t);
                             var state = t with { SelectedValues = request.USERDATA };
@@ -119,7 +119,7 @@ namespace ObririUssd.Services
                     }
                     if (previousData.Equals(6))//Perm 2
                     {
-                        if (3.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                        if (request.USERDATA.Split(" ").Length <= 3 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                         {
                             PreviousState.TryRemove(request.MSISDN, out UserState t);
                             var state = t with { SelectedValues = request.USERDATA };
