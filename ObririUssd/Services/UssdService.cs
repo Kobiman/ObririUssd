@@ -165,16 +165,15 @@ namespace ObririUssd.Services
                     return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
                 }
 
-                var amount = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData,state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
-
-                var response = await request.ProcessPayment(amount);
+                request.USERDATA = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData,state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
+                var response = await request.ProcessPayment();
 
                 //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
                 if (response.Content.Contains("approved")) //(true)
                 {
                     var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
                     mainMenuItem.TryGetValue(state.UserOption, out string optionName);
-                    var m = GetFinalStates(state.PreviousData, optionName, amount);
+                    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
 
                     return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
                 }
