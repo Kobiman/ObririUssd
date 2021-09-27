@@ -107,7 +107,7 @@ namespace ObririUssd.Services
             {
                 if (int.TryParse(state?.PreviousData, out int previousData))
                 {
-                    if (previousData.Equals(7))
+                    if (previousData.Equals(7))//Perm 3
                     {
                         if (4.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                         {
@@ -117,7 +117,7 @@ namespace ObririUssd.Services
                             return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
                         }
                     }
-                    if (previousData.Equals(6))
+                    if (previousData.Equals(6))//Perm 2
                     {
                         if (3.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                         {
@@ -165,7 +165,7 @@ namespace ObririUssd.Services
                     return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
                 }
 
-                var amount = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * state.SelectedValues.Split(" ").Length).ToString() : request.USERDATA;
+                var amount = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData,state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
 
                 var response = await request.ProcessPayment(amount);
 
@@ -241,7 +241,7 @@ namespace ObririUssd.Services
                 //case "67":
                 case "6":
                     //case "7171":
-                    return $"{option}\n6.Perm - 2 \nEnter 3 distinct number(s) from (1-90)";
+                    return $"{option}\n6.Perm - 2 \nEnter mimimun of 3 distinct number(s) from (1-90)";
 
                 //option 7
                 //case "71":
@@ -253,7 +253,7 @@ namespace ObririUssd.Services
                 //case "77":
                 case "7":
                     //case "7171":
-                    return $"{option}\n7.Perm - 3 \nEnter 4 distinct number(s) from (1-90)";
+                    return $"{option}\n7.Perm - 3 \nEnter mimimun of 4 distinct number(s) from (1-90)";
 
 
 

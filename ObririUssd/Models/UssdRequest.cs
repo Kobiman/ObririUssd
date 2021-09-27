@@ -95,6 +95,36 @@ namespace ObririUssd.Models
             return client.ExecuteAsync(request);
         }
 
+        public int GetNumberOfLines(string previousData, int length)
+        {
+            if (previousData == "6") return GetPerm2Lines(length);
+            return GetPerm3Lines(length);
+        }
+
+        private int GetPerm2Lines(int length)
+        {
+            int numberofLines = 0;
+            if (length == 2) return 1;
+            for (int i = 2; i < length; i++)
+            {
+                numberofLines += i;
+            }
+            return numberofLines + 1;
+        }
+        private int GetPerm3Lines(int length)
+        {
+            int numberofLines = 4;
+            int divisor = 2;
+            if (length == 3) return 1;
+            if (length == 4) return 4;
+            for (int i = 4; i < length; i++)
+            {
+                numberofLines = numberofLines * i/divisor;
+                divisor++;
+            }
+            return numberofLines;
+        }
+
         private string GetNetwork(string network)
         {
            if (network.ToUpper().Equals("MTN")) return "MTN";
