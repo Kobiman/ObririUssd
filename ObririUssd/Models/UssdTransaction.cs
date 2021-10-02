@@ -23,5 +23,6 @@ namespace ObririUssd.Models
         public DateTime TransactionDate { get; set; } = DateTime.Now;
         public string Message { get; set; }
         public bool Status { get; set; }
+        public string GameType { get; set; }
     }
 }

@@ -39,6 +39,24 @@ namespace ObririUssd.Services
             { "6", new Dictionary<string, string>{{ "1", "OLD SOLDIER" },{ "2", "NATIONAL" }}},
             { "7", new Dictionary<string, string>{{ "1", "SUNDAY SPECIAL" }}}
         };
+
+        Dictionary<string, string> GameTypes = new Dictionary<string, string>
+        {
+            { "PIONEER", "NLAGames" },
+            { "MONDAY SPECIAL", "VAGOBIRIGames" },
+            { "VAG EAST", "NLAGames" },
+            { "LUCKY TUESDAY", "VAGOBIRIGames" },
+            { "VAG WEST", "NLAGames" },
+            { "MID-WEEK", "VAGOBIRIGames" },
+            { "AFRICAN LOTTO", "NLAGames" },
+            { "FORTUNE THURSDAY", "VAGOBIRIGames" },
+            { "OBIRI SPECIAL", "VAGOBIRIGames" },
+            { "FRIDAY BONANZA", "VAGOBIRIGames" },
+            { "OLD SOLDIER", "NLAGames" },
+            { "NATIONAL", "NLAGames" },
+            { "SUNDAY SPECIAL", "NLAGames" }
+        };
+
         private UserState state = null;
         private string userid = "WEB_MATE";
         private UssdDataContext _context;
@@ -282,6 +300,7 @@ namespace ObririUssd.Services
                 Amount = int.Parse(request.USERDATA),
                 OptionName = option,
                 OptionValue = optionValue,
+                GameType = GameTypes[option.Split(":")[0]],
                 PhoneNumber = request.MSISDN
             };
             _context.Add(transaction);

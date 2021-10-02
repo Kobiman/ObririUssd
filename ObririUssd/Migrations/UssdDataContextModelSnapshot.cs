@@ -77,6 +77,9 @@ namespace ObririUssd.Migrations
                     b.Property<string>("ApprovedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("GameType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
 
