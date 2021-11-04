@@ -12,5 +12,6 @@ namespace ObririUssd.Models
         public int WiningDraws { get; set; }
         public string MachineNumbers { get; set; }
         public float WiningDrawAmount { get; set; }
+        public string GameType { get; set; }
     }
 }
