@@ -42,19 +42,19 @@ namespace ObririUssd.Services
 
         Dictionary<string, string> GameTypes = new Dictionary<string, string>
         {
-            { "PIONEER", "NLAGames" },
-            { "MONDAY SPECIAL", "VAGOBIRIGames" },
-            { "VAG EAST", "NLAGames" },
-            { "LUCKY TUESDAY", "VAGOBIRIGames" },
-            { "VAG WEST", "NLAGames" },
-            { "MID-WEEK", "VAGOBIRIGames" },
-            { "AFRICAN LOTTO", "NLAGames" },
-            { "FORTUNE THURSDAY", "VAGOBIRIGames" },
-            { "OBIRI SPECIAL", "NLAGames" },
-            { "FRIDAY BONANZA", "VAGOBIRIGames" },
-            { "OLD SOLDIER", "NLAGames" },
+            { "PIONEER", "VAGOBIRIGames" },
+            { "MONDAY SPECIAL", "NLAGames" },
+            { "VAG EAST", "VAGOBIRIGames" },
+            { "LUCKY TUESDAY", "NLAGames" },
+            { "VAG WEST", "VAGOBIRIGames" },
+            { "MID-WEEK", "NLAGames" },
+            { "AFRICAN LOTTO", "VAGOBIRIGames" },
+            { "FORTUNE THURSDAY", "NLAGames" },
+            { "OBIRI SPECIAL", "VAGOBIRIGames" },
+            { "FRIDAY BONANZA", "NLAGames" },
+            { "OLD SOLDIER", "VAGOBIRIGames" },
             { "NATIONAL", "NLAGames" },
-            { "SUNDAY SPECIAL", "NLAGames" }
+            { "SUNDAY SPECIAL", "VAGOBIRIGames" }
         };
 
         private UserState state = null;
