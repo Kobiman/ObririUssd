@@ -29,6 +29,9 @@ namespace ObririUssd.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("GameName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("GameType")
                         .HasColumnType("nvarchar(max)");
 
