@@ -175,13 +175,13 @@ namespace ObririUssd.Services
                         MSGTYPE = true
                     };
                 }
-                if (float.Parse(request.USERDATA) < 10)
-                {
-                    PreviousState.TryRemove(request.MSISDN, out UserState userState);
-                    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
-                    PreviousState.TryAdd(request.MSISDN, state);
-                    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
-                }
+                //if (float.Parse(request.USERDATA) < 10)
+                //{
+                //    PreviousState.TryRemove(request.MSISDN, out UserState userState);
+                //    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
+                //    PreviousState.TryAdd(request.MSISDN, state);
+                //    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
+                //}
 
                 request.USERDATA = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData,state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
                 var response = await request.ProcessPayment();
