@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ObririUssd.Controllers
@@ -24,9 +25,9 @@ namespace ObririUssd.Controllers
         }
 
         [HttpPost("index")]
-        public async Task<IActionResult> Index([FromBody] UssdRequest request)
+        public async Task<IActionResult> Index(CancellationToken token, [FromBody] UssdRequest request)
         {
-            var result = await _ussdService.ProcessRequest(request);
+            var result = await _ussdService.ProcessRequest(request,token);
             return Ok(result);
         }
 

@@ -11,5 +11,6 @@ namespace ObririUssd.Models
         public string PreviousData { get; set; }
         public string SelectedValues { get; set; }
         public string UserOption { get; set; }
+        public string GameType { get; set; }
     }
 }

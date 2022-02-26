@@ -62,6 +62,9 @@ namespace ObririUssd.Migrations
                     b.Property<int>("EndTime")
                         .HasColumnType("int");
 
+                    b.Property<string>("GameType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("StartTime")
                         .HasColumnType("int");
 

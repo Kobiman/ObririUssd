@@ -65,156 +65,175 @@ namespace ObririUssd.Services
         {
             _context = context;
         }
-        public async Task<UssdResponse> ProcessRequest(UssdRequest request)
+        public async Task<UssdResponse> ProcessRequest(UssdRequest request, System.Threading.CancellationToken token)
         {
-            var duration = await _context.UssdLock.FirstOrDefaultAsync();
-            if (duration.Disabled)
+            try
+            {
+                if(PreviousState.TryGetValue(request.USERID, out UserState s))
+                {
+                    var duration = await _context.UssdLock.FirstOrDefaultAsync(x=>x.GameType == s.GameType, cancellationToken: token);
+                    if (duration is not null && duration.Disabled)
+                    {
+                        PreviousState.TryRemove(request.MSISDN, out _);
+                        return UssdResponse.CreateResponse(userid, request.MSISDN, $"Sorry Draw is closed for {s.GameType}", false);
+                    }
+
+                    if (duration is not null && duration.DrawHasEnded())
+                    {
+                        PreviousState.TryRemove(request.MSISDN, out _);
+                        return UssdResponse.CreateResponse(userid, request.MSISDN, $"Sorry Draw Has Ended for {s.GameType}", false);
+                    }
+                }
+                
+
+                IncreaseState(request);
+
+
+                if (state?.CurrentState?.Length == 1 && string.IsNullOrWhiteSpace(request.USERDATA))
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (PreviousState.TryGetValue(request.MSISDN, out state))
+                    {
+                        PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                        var _state = tt with { CurrentState = "" };
+                        PreviousState.TryAdd(request.MSISDN, _state);
+                        PreviousState.TryGetValue(request.MSISDN, out state);
+                    }
+                    OptionsOfTheWeek.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
+                    return ProcessMenu(request, $"{option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+                }
+
+                if (state?.CurrentState?.Length == 2)
+                {
+                    token.ThrowIfCancellationRequested();
+                    OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]].TryGetValue(state.UserOption, out string optionsOfTheDay);
+
+                    if (!request.ValidateInputFormat())
+                    {
+                        DecreaseState(request);
+                        return UssdResponse.CreateResponse(userid, request.MSISDN, "Input value is not in the rigth format", true);
+                    }
+
+                    if (!request.ValidateInputRange(7, 2))
+                    {
+                        DecreaseState(request);
+                        return UssdResponse.CreateResponse(userid, request.MSISDN, $"Enter value between {2} - {7}", true);
+                    }
+                    //var key = request.USERDATA + state.CurrentState;
+                    var message = GetSubmenus(optionsOfTheDay, request.USERDATA);
+                    return ProcessSubMenu(request, message);
+                }
+                if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.USERDATA))
+                {
+                    token.ThrowIfCancellationRequested();
+                    PreviousState.TryRemove(request.MSISDN, out UserState userState);
+                    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
+                    PreviousState.TryAdd(request.MSISDN, state);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {state?.PreviousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
+                }
+                else if (state?.CurrentState?.Length == 3)
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (int.TryParse(state?.PreviousData, out int previousData))
+                    {
+                        if (previousData.Equals(7))//Perm 3
+                        {
+                            if (request.USERDATA.Split(" ").Length >= 4 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                            {
+                                PreviousState.TryRemove(request.MSISDN, out UserState t);
+                                var state = t with { SelectedValues = request.USERDATA };
+                                PreviousState.TryAdd(request.MSISDN, state);
+                                return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                            }
+                        }
+                        if (previousData.Equals(6))//Perm 2
+                        {
+                            if (request.USERDATA.Split(" ").Length >= 3 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                            {
+                                PreviousState.TryRemove(request.MSISDN, out UserState t);
+                                var state = t with { SelectedValues = request.USERDATA };
+                                PreviousState.TryAdd(request.MSISDN, state);
+                                return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                            }
+                        }
+                        else
+                        {
+                            if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
+                            {
+                                PreviousState.TryRemove(request.MSISDN, out UserState t);
+                                var state = t with { SelectedValues = request.USERDATA };
+                                PreviousState.TryAdd(request.MSISDN, state);
+                                return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
+                            }
+                        }
+
+                        PreviousState.TryRemove(request.MSISDN, out UserState tt);
+                        var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
+                        PreviousState.TryAdd(request.MSISDN, _state);
+                        return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
+                    }
+                }
+                else if (state?.CurrentState?.Length == 4)
+                {
+                    if (!int.TryParse(request.USERDATA, out int r))
+                    {
+                        DecreaseState(request);
+                        return new UssdResponse
+                        {
+                            USERID = userid,
+                            MSISDN = request.MSISDN,
+                            MSG = "Input value is not in the rigth format",
+                            MSGTYPE = true
+                        };
+                    }
+                    //if (float.Parse(request.USERDATA) < 10)
+                    //{
+                    //    PreviousState.TryRemove(request.MSISDN, out UserState userState);
+                    //    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
+                    //    PreviousState.TryAdd(request.MSISDN, state);
+                    //    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
+                    //}
+
+                    request.USERDATA = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData, state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
+                    var response = await request.ProcessPayment();
+
+                    //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
+                    if (true)//(response.Content.Contains("approved"))
+                    {
+                        var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+                        mainMenuItem.TryGetValue(state.UserOption, out string optionName);
+                        var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+
+                        return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
+                    }
+                    PreviousState.TryRemove(request.MSISDN, out _);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                }
+                else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
+                {
+                    var dayOfWeek = DateTime.Now.DayOfWeek.ToString();
+                    OptionsOfTheDay[DaysOfTheWeek[dayOfWeek]].TryGetValue(request.USERDATA, out string optionsOfTheDay);
+                    if (optionsOfTheDay is null)
+                    {
+                        DecreaseState(request);
+                        var _opt = OptionsOfTheWeek[DaysOfTheWeek[dayOfWeek]];
+                        return ProcessMenu(request, $"{_opt}");
+                    }
+                    var gameType = GameTypes[optionsOfTheDay];
+                    return ProcessMenu(request, $"{optionsOfTheDay}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n", gameType);
+                }
+                var day = DateTime.Now.DayOfWeek.ToString();
+                var _option = OptionsOfTheWeek[DaysOfTheWeek[day]];
+                return ProcessMenu(request, $"{day}\n{_option}");
+                //Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
+                // return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+
+            }
+            catch (OperationCanceledException)
             {
                 PreviousState.TryRemove(request.MSISDN, out UserState _);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, "Sorry Draw is closed", false);
+                return UssdResponse.CreateResponse(userid, request.MSISDN, "", false);
             }
-
-            if (duration is not null && duration.DrawHasEnded())
-            {
-                PreviousState.TryRemove(request.MSISDN, out UserState _);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, "Sorry Draw Has Ended", false);
-            }
-
-            IncreaseState(request);
-
-            if (state?.CurrentState?.Length == 1 && string.IsNullOrWhiteSpace(request.USERDATA))
-            {
-                if (PreviousState.TryGetValue(request.MSISDN, out state))
-                {
-                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                    var _state = tt with { CurrentState = "" };
-                    PreviousState.TryAdd(request.MSISDN, _state);
-                    PreviousState.TryGetValue(request.MSISDN, out state);
-                }
-                OptionsOfTheWeek.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
-                return ProcessMenu(request, $"{option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
-            }
-
-            if (state?.CurrentState?.Length == 2)
-            {
-                OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]].TryGetValue(state.UserOption, out string optionsOfTheDay);
-
-                if (!request.ValidateInputFormat())
-                {
-                    DecreaseState(request);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Input value is not in the rigth format", true);
-                }
-
-                if (!request.ValidateInputRange(7, 2))
-                {
-                    DecreaseState(request);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Enter value between {2} - {7}", true);
-                }
-                //var key = request.USERDATA + state.CurrentState;
-                var message = GetSubmenus(optionsOfTheDay, request.USERDATA);
-                return ProcessSubMenu(request, message);
-            }
-            if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.USERDATA))
-            {
-                PreviousState.TryRemove(request.MSISDN, out UserState userState);
-                var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
-                PreviousState.TryAdd(request.MSISDN, state);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {state?.PreviousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
-            }
-            else if (state?.CurrentState?.Length == 3)
-            {
-                if (int.TryParse(state?.PreviousData, out int previousData))
-                {
-                    if (previousData.Equals(7))//Perm 3
-                    {
-                        if (request.USERDATA.Split(" ").Length >= 4 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
-                        {
-                            PreviousState.TryRemove(request.MSISDN, out UserState t);
-                            var state = t with { SelectedValues = request.USERDATA };
-                            PreviousState.TryAdd(request.MSISDN, state);
-                            return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
-                        }
-                    }
-                    if (previousData.Equals(6))//Perm 2
-                    {
-                        if (request.USERDATA.Split(" ").Length >= 3 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
-                        {
-                            PreviousState.TryRemove(request.MSISDN, out UserState t);
-                            var state = t with { SelectedValues = request.USERDATA };
-                            PreviousState.TryAdd(request.MSISDN, state);
-                            return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
-                        }
-                    }
-                    else
-                    {
-                        if (previousData.Equals(request.USERDATA.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
-                        {
-                            PreviousState.TryRemove(request.MSISDN, out UserState t);
-                            var state = t with { SelectedValues = request.USERDATA };
-                            PreviousState.TryAdd(request.MSISDN, state);
-                            return UssdResponse.CreateResponse(userid, request.MSISDN, "Enter amount", true);
-                        }
-                    }
-                    
-                    PreviousState.TryRemove(request.MSISDN, out UserState tt);
-                    var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.USERDATA };
-                    PreviousState.TryAdd(request.MSISDN, _state);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Please Enter {previousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
-                }
-            }
-            else if (state?.CurrentState?.Length == 4)
-            {
-                if (!int.TryParse(request.USERDATA, out int r))
-                {
-                    DecreaseState(request);
-                    return new UssdResponse
-                    {
-                        USERID = userid,
-                        MSISDN = request.MSISDN,
-                        MSG = "Input value is not in the rigth format",
-                        MSGTYPE = true
-                    };
-                }
-                //if (float.Parse(request.USERDATA) < 10)
-                //{
-                //    PreviousState.TryRemove(request.MSISDN, out UserState userState);
-                //    var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
-                //    PreviousState.TryAdd(request.MSISDN, state);
-                //    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
-                //}
-
-                request.USERDATA = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData,state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
-                var response = await request.ProcessPayment();
-
-                //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
-                if (true)//(response.Content.Contains("approved"))
-                {
-                    var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
-                    mainMenuItem.TryGetValue(state.UserOption, out string optionName);
-                    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
-
-                    return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
-                }
-                PreviousState.TryRemove(request.MSISDN, out UserState _);
-                return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
-            }
-            else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
-            {
-                var dayOfWeek = DateTime.Now.DayOfWeek.ToString();
-                OptionsOfTheDay[DaysOfTheWeek[dayOfWeek]].TryGetValue(request.USERDATA,out string optionsOfTheDay);
-                if(optionsOfTheDay is null)
-                {
-                    DecreaseState(request);
-                    var _opt = OptionsOfTheWeek[DaysOfTheWeek[dayOfWeek]];
-                    return ProcessMenu(request, $"{_opt}");
-                }
-                return ProcessMenu(request, $"{optionsOfTheDay}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
-            }
-            var day = DateTime.Now.DayOfWeek.ToString();
-            var _option = OptionsOfTheWeek[DaysOfTheWeek[day]];
-            return ProcessMenu(request, $"{day}\n{_option}");
-            //Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
-            // return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
         }
 
         private void DecreaseState(UssdRequest request)
@@ -330,7 +349,7 @@ namespace ObririUssd.Services
             return UssdResponse.CreateResponse(userid, request.MSISDN, message, true);
         }
 
-        private UssdResponse ProcessMenu(UssdRequest request, string message)
+        private UssdResponse ProcessMenu(UssdRequest request, string message, string gameType = "")
         {
             UserState _state;
             PreviousState.TryRemove(request.MSISDN, out UserState s);
@@ -340,7 +359,15 @@ namespace ObririUssd.Services
             }
             else
             {
-                _state = s with { UserOption = request.USERDATA, PreviousData = request.USERDATA };
+                if (string.IsNullOrWhiteSpace(gameType))
+                {
+                    _state = s with { UserOption = request.USERDATA, PreviousData = request.USERDATA };
+                }
+                else
+                {
+                    _state = s with { UserOption = request.USERDATA, PreviousData = request.USERDATA, GameType = gameType };
+                }
+                
             } 
             PreviousState.TryAdd(request.MSISDN, _state);
             return UssdResponse.CreateResponse(userid, request.MSISDN, message, true);

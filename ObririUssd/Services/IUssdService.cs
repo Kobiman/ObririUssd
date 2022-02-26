@@ -6,6 +6,6 @@ namespace ObririUssd.Services
 {
     public interface IUssdService
     {
-        Task<UssdResponse> ProcessRequest(UssdRequest request);
+        Task<UssdResponse> ProcessRequest(UssdRequest request, System.Threading.CancellationToken token);
     }
 }
