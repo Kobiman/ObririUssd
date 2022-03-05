@@ -74,10 +74,12 @@ namespace ObririUssd.Models
 
         public Task<IRestResponse> ProcessPayment()
         {
-            var client = new RestClient("https://test.theteller.net/v1.1/transaction/process");
+            //var client = new RestClient("https://test.theteller.net/v1.1/transaction/process"); 
+            var client = new RestClient("https://prod.theteller.net/v1.1/transaction/process");
             client.Timeout = -1;
             var request = new RestRequest(Method.POST);
-            request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpaR05sTkRZMk9EUmxObVV6T0RSbFpUUTRNVE14WlRka1lXWmlaak5sWkRJPQ==");
+            //request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpaR05sTkRZMk9EUmxObVV6T0RSbFpUUTRNVE14WlRka1lXWmlaak5sWkRJPQ==");
+            request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpZemc0TVRZMk4ySXlZelZqTVRBMVkySTBPRGM1TVdOaFpUSXhNREF6T0RZPQ==");
             request.AddHeader("Content-Type", "application/json");
             var body = JsonSerializer.Serialize(
                                         new PaymentRequest
