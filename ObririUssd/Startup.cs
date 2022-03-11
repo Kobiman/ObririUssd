@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
+using ObririUssd.BackgroundServices;
 using ObririUssd.Data;
 using ObririUssd.Services;
 using System;
@@ -36,7 +37,9 @@ namespace ObririUssd
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.JsonSerializerOptions.PropertyNamingPolicy = null;
             });
-            services.AddTransient<IUssdService, UssdService>();
+            services.AddHostedService<PaymentBackgroundService>();
+            services.AddTransient<IUssdService, UssdService>(); 
+            services.AddSingleton<IPaymentChannel, PaymentChannel>();
             services.AddDbContext<UssdDataContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));

@@ -87,7 +87,7 @@ namespace ObririUssd.Models
                                             amount = To12Digits(USERDATA),
                                             processing_code = "000200",
                                             transaction_id = Unique_Code(),
-                                            desc = "Mobile Money Payment Test",
+                                            desc = "VAG OBIRI LOTORIES",
                                             merchant_id = "TTM-00005781",
                                             subscriber_number = MSISDN,
                                             r_switch = GetNetwork(NETWORK),
@@ -131,7 +131,7 @@ namespace ObririUssd.Models
         {
            if (network.ToUpper().Equals("MTN")) return "MTN";
            if (network.ToUpper().Equals("AIRTELTIGO")) return "ATL";
-           if (network.ToUpper().Equals("Tigo")) return "TGO";
+           if (network.ToUpper().Equals("TIGO")) return "TGO";
            if (network.ToUpper().Equals("VODAFONE")) return "VDF";
             return "";
         }
@@ -152,14 +152,32 @@ namespace ObririUssd.Models
 
         private string To12Digits(string amount)
         {
+            var _amount = float.Parse(amount) * 100;
             StringBuilder sb = new StringBuilder();
             int i = 0;
-            while (i<(12 - amount.Length))
+            while (i<(12 - _amount.ToString().Length))
             {
                 sb.Append('0');
                 i++;
             }
-            return sb.Append(amount).ToString();
+            return sb.Append(_amount).ToString();
         }
+
+        public Dictionary<string, string> GameTypes = new Dictionary<string, string>
+        {
+            { "PIONEER", "VAGOBIRIGames" },
+            { "MONDAY SPECIAL", "NLAGames" },
+            { "VAG EAST", "VAGOBIRIGames" },
+            { "LUCKY TUESDAY", "NLAGames" },
+            { "VAG WEST", "VAGOBIRIGames" },
+            { "MID-WEEK", "NLAGames" },
+            { "AFRICAN LOTTO", "VAGOBIRIGames" },
+            { "FORTUNE THURSDAY", "NLAGames" },
+            { "OBIRI SPECIAL", "VAGOBIRIGames" },
+            { "FRIDAY BONANZA", "NLAGames" },
+            { "OLD SOLDIER", "VAGOBIRIGames" },
+            { "NATIONAL", "NLAGames" },
+            { "SUNDAY SPECIAL", "VAGOBIRIGames" }
+        };
     }
 }

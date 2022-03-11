@@ -7,7 +7,14 @@ using System.Threading.Tasks;
 
 namespace ObririUssd.Data
 {
-    public class UssdDataContext : DbContext
+    public interface IUssdDataContext
+    {
+        DbSet<UssdTransaction> Trans { get; set; }
+        DbSet<TransactionLog> TransactionLogs { get; set; }
+        DbSet<UssdLock> UssdLock { get; set; }
+    }
+
+    public class UssdDataContext : DbContext, IUssdDataContext
     {
         public UssdDataContext(DbContextOptions<UssdDataContext> options) : base(options)
         {

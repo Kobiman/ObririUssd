@@ -17,10 +17,6 @@ namespace ObririUssd.Services
     {
         static ConcurrentDictionary<string, UserState> _previousState;
         static ConcurrentDictionary<string, UserState> PreviousState = _previousState ?? new ConcurrentDictionary<string, UserState>();
-        //Dictionary<string, string> Options = new Dictionary<string, string>
-        //{
-        //    { "1", "Mon.-PIONEER" },{ "2", "Tue.-VAG EAST" },{ "3", "Wed.-VAG WEST" },{ "4", "Thur.-AFRICAN LOTTO" },{ "5", "Fri.-OBIRI SPECIAL" },{ "6", "Sat.-OLD SOLDIER" },{ "7", "SUN.-SPECIAL" }
-        //};
         Dictionary<string, string> DaysOfTheWeek = new Dictionary<string, string>
         {
             { "Monday", "1" },{ "Tuesday", "2" },{ "Wednesday", "3" },{ "Thursday", "4" },{ "Friday", "5" },{ "Saturday", "6" },{ "Sunday", "7" }
@@ -40,30 +36,15 @@ namespace ObririUssd.Services
             { "7", new Dictionary<string, string>{{ "1", "SUNDAY SPECIAL" }}}
         };
 
-        Dictionary<string, string> GameTypes = new Dictionary<string, string>
-        {
-            { "PIONEER", "VAGOBIRIGames" },
-            { "MONDAY SPECIAL", "NLAGames" },
-            { "VAG EAST", "VAGOBIRIGames" },
-            { "LUCKY TUESDAY", "NLAGames" },
-            { "VAG WEST", "VAGOBIRIGames" },
-            { "MID-WEEK", "NLAGames" },
-            { "AFRICAN LOTTO", "VAGOBIRIGames" },
-            { "FORTUNE THURSDAY", "NLAGames" },
-            { "OBIRI SPECIAL", "VAGOBIRIGames" },
-            { "FRIDAY BONANZA", "NLAGames" },
-            { "OLD SOLDIER", "VAGOBIRIGames" },
-            { "NATIONAL", "NLAGames" },
-            { "SUNDAY SPECIAL", "VAGOBIRIGames" }
-        };
-
         private UserState state = null;
         private string userid = "WEB_MATE";
         private UssdDataContext _context;
+        private readonly IPaymentChannel _channel;
 
-        public UssdService(UssdDataContext context)
+        public UssdService(UssdDataContext context, IPaymentChannel channel)
         {
             _context = context;
+            _channel = channel;
         }
         public async Task<UssdResponse> ProcessRequest(UssdRequest request, System.Threading.CancellationToken token)
         {
@@ -100,10 +81,10 @@ namespace ObririUssd.Services
                         PreviousState.TryGetValue(request.MSISDN, out state);
                     }
                     OptionsOfTheWeek.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
-                    return ProcessMenu(request, $"{option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
+                    return ProcessMenu(request, $"{option}");
                 }
 
-                if (state?.CurrentState?.Length == 2)
+                if (state?.CurrentState?.Length == 2 )
                 {
                     token.ThrowIfCancellationRequested();
                     OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]].TryGetValue(state.UserOption, out string optionsOfTheDay);
@@ -194,21 +175,20 @@ namespace ObririUssd.Services
                     //    return UssdResponse.CreateResponse(userid, request.NETWORK, "Transaction amount below GHS 10.00 are not allowed", true);
                     //}
 
-                    token.ThrowIfCancellationRequested();
                     request.USERDATA = int.Parse(state.PreviousData) > 5 ? (int.Parse(request.USERDATA) * request.GetNumberOfLines(state.PreviousData, state.SelectedValues.Split(" ").Length)).ToString() : request.USERDATA;
-                    var response = await request.ProcessPayment();
-                    token.ThrowIfCancellationRequested();
-                    //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
-                    if (response.Content.Contains("approved"))
-                    {
-                        var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
-                        mainMenuItem.TryGetValue(state.UserOption, out string optionName);
-                        var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
+                    //var response = await request.ProcessPayment();
+                    //if(true) //(response.Content.Contains("approved"))
+                    //{
+                    //    var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
+                    //    mainMenuItem.TryGetValue(state.UserOption, out string optionName);
+                    //    var m = GetFinalStates(state.PreviousData, optionName, request.USERDATA);
 
-                        return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
-                    }
+                    //    return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
+                    //}
+                    await _channel.WriteAsync(new PaymentChannelMessage(request,state));
                     PreviousState.TryRemove(request.MSISDN, out _);
-                    return UssdResponse.CreateResponse(userid, request.MSISDN, "Error", false);
+                    //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
+                    return UssdResponse.CreateResponse(userid, request.MSISDN, $"Processing transaction, please wait... go to approvals if you do not receive prompt.", false);
                 }
                 else if (!string.IsNullOrWhiteSpace(request?.USERDATA) && !string.IsNullOrWhiteSpace(state?.CurrentState))
                 {
@@ -220,15 +200,12 @@ namespace ObririUssd.Services
                         var _opt = OptionsOfTheWeek[DaysOfTheWeek[dayOfWeek]];
                         return ProcessMenu(request, $"{_opt}");
                     }
-                    var gameType = GameTypes[optionsOfTheDay];
+                    var gameType = request.GameTypes[optionsOfTheDay];
                     return ProcessMenu(request, $"{optionsOfTheDay}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n", gameType);
                 }
                 var day = DateTime.Now.DayOfWeek.ToString();
                 var _option = OptionsOfTheWeek[DaysOfTheWeek[day]];
                 return ProcessMenu(request, $"{day}\n{_option}");
-                //Options.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string _option);
-                // return ProcessMenu(request, $"{_option}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n");
-
             }
             catch (OperationCanceledException)
             {
@@ -239,7 +216,17 @@ namespace ObririUssd.Services
 
         private void DecreaseState(UssdRequest request)
         {
-            var _state = new UserState { CurrentState = state.CurrentState.Length == 1 ? "" : state.CurrentState.Substring(0, 2), PreviousData = request.USERDATA };
+            var currentState = "";
+            switch (state.CurrentState.Length)
+            {
+                case 2:
+                    currentState = state.CurrentState.Substring(0, 1);
+                    break;
+                case 3:
+                    currentState = state.CurrentState.Substring(0, 2);
+                    break;
+            }
+            var _state = state with { CurrentState = currentState, PreviousData = request.USERDATA };
             PreviousState.TryRemove(request.MSISDN, out UserState tt);
             PreviousState.TryAdd(request.MSISDN, _state);
         }
@@ -296,50 +283,6 @@ namespace ObririUssd.Services
 
             }
             return $"{optionValve}:\n{option}.Direct-{option}\nEnter {option} distinct number(s) from (1-90).\n Separate each number with a space ";
-        }
-
-        private MessageType GetFinalStates(string previousValue, string optionName, string amount)
-        {
-            switch (previousValue)
-            {
-                //previousData+Userdata+CurrentState
-                case "6":
-                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-2,  GHS {amount} is registered for Perm - 2. Id", Option = $"{optionName}:Perm - 2" };
-                case "7":
-                    return new MessageType { Message = $"Your ticket: {optionName}:Perm-3,  GHS {amount} is registered for Perm - 3. Id", Option = $"{optionName}:Perm - 3" };
-            }
-            return new MessageType { Message = $"Your ticket: {optionName} Direct-{previousValue},  GHS {amount} is registered for Direct - {previousValue}. Id", Option = $"{optionName}:Direct - {previousValue}" };
-        }
-
-        private async Task<UssdResponse> ProcessFinalState(UssdRequest request, string message, string option,string optionValue)
-        {
-
-            PreviousState.TryRemove(request.MSISDN, out UserState tt);
-            var transaction = new UssdTransaction
-            {
-                Amount = int.Parse(request.USERDATA),
-                OptionName = option,
-                OptionValue = optionValue,
-                GameType = GameTypes[option.Split(":")[0]],
-                PhoneNumber = request.MSISDN
-            };
-            _context.Add(transaction);
-            await _context.SaveChangesAsync();
-            var savedTransaction = await _context.Trans.FindAsync(transaction.Id);
-            savedTransaction.Message = $"{message}:{transaction.Id} {DateTime.Now}";
-            savedTransaction.Status = true;
-            await _context.SaveChangesAsync();
-
-            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id}. Selected values {optionValue}\n{DateTime.Now}");
-            PreviousState.TryRemove(request.MSISDN, out UserState _);
-
-            return new UssdResponse
-            {
-                USERID = userid,
-                MSISDN = request.MSISDN,
-                MSG = "Success",
-                MSGTYPE = false
-            };
         }
 
         private UssdResponse ProcessSubMenu(UssdRequest request, string message)
