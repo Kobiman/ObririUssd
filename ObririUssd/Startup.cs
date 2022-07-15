@@ -37,7 +37,8 @@ namespace ObririUssd
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.JsonSerializerOptions.PropertyNamingPolicy = null;
             });
-            services.AddHostedService<PaymentBackgroundService>();
+            services.AddHostedService<PaymentBackgroundService>(); 
+            services.AddHostedService<UssdSessionBackgroundService>();
             services.AddTransient<IUssdService, UssdService>(); 
             services.AddSingleton<IPaymentChannel, PaymentChannel>();
             services.AddDbContext<UssdDataContext>(options =>

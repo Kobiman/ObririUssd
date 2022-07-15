@@ -10,13 +10,13 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static ObririUssd.UssdSessionManager;
 
 namespace ObririUssd.Services
 {
     public class UssdService : IUssdService
     {
-        static ConcurrentDictionary<string, UserState> _previousState;
-        static ConcurrentDictionary<string, UserState> PreviousState = _previousState ?? new ConcurrentDictionary<string, UserState>();
+        
         Dictionary<string, string> DaysOfTheWeek = new Dictionary<string, string>
         {
             { "Monday", "1" },{ "Tuesday", "2" },{ "Wednesday", "3" },{ "Thursday", "4" },{ "Friday", "5" },{ "Saturday", "6" },{ "Sunday", "7" }
@@ -50,19 +50,22 @@ namespace ObririUssd.Services
         {
             try
             {
-                if(PreviousState.TryGetValue(request.USERID, out UserState s))
+                if(PreviousState.TryGetValue(request.MSISDN, out UserState s))
                 {
-                    var duration = await _context.UssdLock.FirstOrDefaultAsync(x=>x.GameType == s.GameType);
-                    if (duration is not null && duration.Disabled)
+                    var duration = await _context.UssdLock.FirstOrDefaultAsync(x=>x.GameType == s.GameType, cancellationToken: token);
+                    if(duration != null)
                     {
-                        PreviousState.TryRemove(request.MSISDN, out _);
-                        return UssdResponse.CreateResponse(userid, request.MSISDN, $"Sorry Draw is closed for {s.GameType}", false);
-                    }
+                        if (duration.Disabled)
+                        {
+                            PreviousState.TryRemove(request.MSISDN, out _);
+                            return UssdResponse.CreateResponse(userid, request.MSISDN, $"Sorry Draw is closed for {s.GameType}", false);
+                        }
 
-                    if (duration is not null && duration.DrawHasEnded())
-                    {
-                        PreviousState.TryRemove(request.MSISDN, out _);
-                        return UssdResponse.CreateResponse(userid, request.MSISDN, $"Sorry Draw Has Ended for {s.GameType}", false);
+                        if (duration.DrawHasEnded())
+                        {
+                            PreviousState.TryRemove(request.MSISDN, out _);
+                            return UssdResponse.CreateResponse(userid, request.MSISDN, $"Sorry Draw Has Ended for {s.GameType}", false);
+                        }
                     }
                 }
                 

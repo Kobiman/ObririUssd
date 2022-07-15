@@ -12,5 +12,6 @@ namespace ObririUssd.Models
         public string SelectedValues { get; set; }
         public string UserOption { get; set; }
         public string GameType { get; set; }
+        public DateTime Duration { get; set; } = DateTime.Now.AddSeconds(30);
     }
 }
