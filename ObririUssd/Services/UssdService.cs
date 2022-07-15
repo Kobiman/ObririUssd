@@ -52,7 +52,7 @@ namespace ObririUssd.Services
             {
                 if(PreviousState.TryGetValue(request.USERID, out UserState s))
                 {
-                    var duration = await _context.UssdLock.FirstOrDefaultAsync(x=>x.GameType == s.GameType, cancellationToken: token);
+                    var duration = await _context.UssdLock.FirstOrDefaultAsync(x=>x.GameType == s.GameType);
                     if (duration is not null && duration.Disabled)
                     {
                         PreviousState.TryRemove(request.MSISDN, out _);
@@ -200,7 +200,7 @@ namespace ObririUssd.Services
                         var _opt = OptionsOfTheWeek[DaysOfTheWeek[dayOfWeek]];
                         return ProcessMenu(request, $"{_opt}");
                     }
-                    var gameType = request.GameTypes[optionsOfTheDay];
+                    var gameType = request.GameTypes()[optionsOfTheDay];
                     return ProcessMenu(request, $"{optionsOfTheDay}\n2.Direct-2\n3.Direct-3\n4.Direct-4\n5.Direct-5\n6.Perm 2\n7.Perm-3\n", gameType);
                 }
                 var day = DateTime.Now.DayOfWeek.ToString();

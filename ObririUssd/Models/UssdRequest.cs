@@ -81,7 +81,25 @@ namespace ObririUssd.Models
             //request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpaR05sTkRZMk9EUmxObVV6T0RSbFpUUTRNVE14WlRka1lXWmlaak5sWkRJPQ==");
             request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpZemc0TVRZMk4ySXlZelZqTVRBMVkySTBPRGM1TVdOaFpUSXhNREF6T0RZPQ==");
             request.AddHeader("Content-Type", "application/json");
-            var body = JsonSerializer.Serialize(
+            request.AddHeader("Cookie", "PHPSESSID=ckou37ehci5nuclea2hld275bg");
+            var body = "";
+            if (NETWORK == "VODAFONE")
+            {
+                body = JsonSerializer.Serialize(
+                                       new PaymentRequestForVodafone
+                                       {
+                                           amount = To12Digits(USERDATA),
+                                           processing_code = "000200",
+                                           transaction_id = Unique_Code(),
+                                           desc = "VAG OBIRI LOTORIES",
+                                           merchant_id = "TTM-00005781",
+                                           subscriber_number = MSISDN,
+                                           r_switch = GetNetwork(NETWORK)
+                                       });
+            }
+            else
+            {
+                body = JsonSerializer.Serialize(
                                         new PaymentRequest
                                         {
                                             amount = To12Digits(USERDATA),
@@ -93,6 +111,37 @@ namespace ObririUssd.Models
                                             r_switch = GetNetwork(NETWORK),
                                             voucher_code = Unique_Code()
                                         });
+            }
+            
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
+            return client.ExecuteAsync(request);
+        }
+
+        public Task<IRestResponse> ProcesPyment()
+        {
+            var client = new RestClient("https://prod.theteller.net/v1.1/transaction/process");
+            client.Timeout = -1;
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Authorization", "Basic dmFnNjBlNWMxMjE3OGYxZjpZemc0TVRZMk4ySXlZelZqTVRBMVkySTBPRGM1TVdOaFpUSXhNREF6T0RZPQ==");
+            request.AddHeader("Content-Type", "application/json");
+            request.AddHeader("Cookie", "PHPSESSID=ckou37ehci5nuclea2hld275bg");
+            var body = @"{
+" + "\n" +
+            @" ""amount"" : ""_amount"",
+" + "\n" +
+            @" ""processing_code"" : ""000200"",
+" + "\n" +
+            @" ""transaction_id"" : ""_transaction_id"",
+" + "\n" +
+            @" ""desc"" : ""VAG OBIRI LOTORIES"",
+" + "\n" +
+            @" ""merchant_id"" : ""TTM-00005781"",
+" + "\n" +
+            @" ""subscriber_number"" : ""_subscriber_number"",
+" + "\n" +
+            @" ""r-switch"" : ""_r-switch""
+" + "\n" +
+            @"}";
             request.AddParameter("application/json", body, ParameterType.RequestBody);
             return client.ExecuteAsync(request);
         }
@@ -163,7 +212,7 @@ namespace ObririUssd.Models
             return sb.Append(_amount).ToString();
         }
 
-        public Dictionary<string, string> GameTypes = new Dictionary<string, string>
+        public Dictionary<string, string> GameTypes()=>new Dictionary<string, string>
         {
             { "PIONEER", "VAGOBIRIGames" },
             { "MONDAY SPECIAL", "NLAGames" },

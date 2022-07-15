@@ -13,6 +13,6 @@ namespace ObririUssd.Models
         public string GameType { get; set; }
         public bool Disabled { get; set; }
 
-        public bool DrawHasEnded() => DateTime.Now.Hour >= EndTime || DateTime.Now.Hour < StartTime;
+        public bool DrawHasEnded() => DateTime.Now.Hour < StartTime || DateTime.Now.Hour >= EndTime;
     }
 }

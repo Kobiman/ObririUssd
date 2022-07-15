@@ -45,7 +45,7 @@ namespace ObririUssd.BackgroundServices
                 Amount = int.Parse(request.USERDATA),
                 OptionName = option,
                 OptionValue = optionValue,
-                GameType = GameTypes[option.Split(":")[0]],
+                GameType = request.GameTypes()[option.Split(":")[0]],
                 PhoneNumber = request.MSISDN
             };
 
