@@ -30,7 +30,7 @@ namespace ObririUssd.BackgroundServices
                     {
                         var mainMenuItem = OptionsOfTheDay[DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()]];
                         mainMenuItem.TryGetValue(r.state.UserOption, out string optionName);
-                        var m = GetFinalStates(r.state.PreviousData, optionName, r.Request.USERDATA);
+                        var m = GetFinalStates(r.state.PreviousData, optionName, r.Request.UserData);
                         await ProcessFinalState(r.Request, m.Message, m.Option, r.state.SelectedValues);
                     }
                 }, stoppingToken).ConfigureAwait(false);
@@ -42,11 +42,11 @@ namespace ObririUssd.BackgroundServices
             try { 
             var transaction = new UssdTransaction
             {
-                Amount = int.Parse(request.USERDATA),
+                Amount = int.Parse(request.UserData),
                 OptionName = option,
                 OptionValue = optionValue,
                 GameType = request.GameTypes()[option.Split(":")[0]],
-                PhoneNumber = request.MSISDN
+                PhoneNumber = request.Msisdn
             };
 
             using (var scope = ServiceContext.ServiceProvider())
@@ -59,7 +59,7 @@ namespace ObririUssd.BackgroundServices
                 savedTransaction.Status = true;
                 await _context.SaveChangesAsync();
             }                
-            await new MessageService().SendSms(request.MSISDN, $"{message}:{transaction.Id}. Selected values {optionValue}\n{DateTime.Now}");
+            await new MessageService().SendSms(request.Msisdn, $"{message}:{transaction.Id}. Selected values {optionValue}\n{DateTime.Now}");
            }
             catch (Exception ex) { }
         }       

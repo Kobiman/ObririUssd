@@ -12,18 +12,31 @@ namespace ObririUssd.Models
 {
     public class UssdRequest
     {
-        public string USERID { get; set; }
-        public string MSISDN { get; set; }
-        public string USERDATA { get; set; }
-        public bool MSGTYPE { get; set; }
-        public string NETWORK { get; set; }
+        
+        
+        public string SessionID { get; set; }
+        public string UserID { get; set; }
+        public bool NewSession { get; set; }
+        public string Msisdn { get; set; }
+        public string UserData { get; set; }
+       // public bool MSGTYPE { get; set; }
+        public string Network { get; set; }
+       
+       //Arkesel
+    // public string SessionID { get; set; }
+    // public string UserID { get; set; }
+    // public bool NewSession { get; set; }
+    // public string Msisdn { get; set; }
+    // public string? UserData { get; set; }
+    // public string Network { get; set; }
 
+    //Arkesel
         private int result;
-        public bool ValidateInputFormat() => int.TryParse(USERDATA, out result);
+        public bool ValidateInputFormat() => int.TryParse(UserData, out result);
         public bool ValidateInputFormats()
         {
             var result = true;
-            foreach(var r in USERDATA.Split(" "))
+            foreach(var r in UserData.Split(" "))
             {
                 result = result &&int.TryParse(r, out int tt);
             }
@@ -34,7 +47,7 @@ namespace ObririUssd.Models
         public bool ValidateInputRanges(int max, int min)
         {
             var value = true;
-            foreach (var r in USERDATA.Split(" "))
+            foreach (var r in UserData.Split(" "))
             {
                 int.TryParse(r, out int tt);
                 value = value && tt <= max && tt >= min;
@@ -43,7 +56,7 @@ namespace ObririUssd.Models
         }
         public bool HasDuplicate()
         {
-            var temp = USERDATA.Split(" ");
+            var temp = UserData.Split(" ");
             if (temp.Distinct().Count().Equals(temp.Length)) return false;
             return true;
         }
@@ -83,18 +96,18 @@ namespace ObririUssd.Models
             request.AddHeader("Content-Type", "application/json");
             request.AddHeader("Cookie", "PHPSESSID=ckou37ehci5nuclea2hld275bg");
             var body = "";
-            if (NETWORK == "VODAFONE")
+            if (Network == "VODAFONE")
             {
                 body = JsonSerializer.Serialize(
                                        new PaymentRequestForVodafone
                                        {
-                                           amount = To12Digits(USERDATA),
+                                           amount = To12Digits(UserData),
                                            processing_code = "000200",
                                            transaction_id = Unique_Code(),
                                            desc = "VAG OBIRI LOTORIES",
                                            merchant_id = "TTM-00005781",
-                                           subscriber_number = MSISDN,
-                                           r_switch = GetNetwork(NETWORK)
+                                           subscriber_number = Msisdn,
+                                           r_switch = GetNetwork(Network)
                                        });
             }
             else
@@ -102,13 +115,13 @@ namespace ObririUssd.Models
                 body = JsonSerializer.Serialize(
                                         new PaymentRequest
                                         {
-                                            amount = To12Digits(USERDATA),
+                                            amount = To12Digits(UserData),
                                             processing_code = "000200",
                                             transaction_id = Unique_Code(),
                                             desc = "VAG OBIRI LOTORIES",
                                             merchant_id = "TTM-00005781",
-                                            subscriber_number = MSISDN,
-                                            r_switch = GetNetwork(NETWORK),
+                                            subscriber_number = Msisdn,
+                                            r_switch = GetNetwork(Network),
                                             voucher_code = Unique_Code()
                                         });
             }

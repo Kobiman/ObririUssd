@@ -1,0 +1,248 @@
+<h1 id="obriri-ussd-service">Obriri USSD Service</h1>
+<p>A .NET 5.0 ASP.NET Core web API service for handling USSD (Unstructured Supplementary Service Data) requests for a lottery/betting system. The service manages user sessions, processes payments, and sends SMS confirmations.</p>
+<h2 id="overview">Overview</h2>
+<p>This application provides a USSD-based interface for users to participate in various lottery games. It supports different game types (Direct, Perm-2, Perm-3) with daily options that vary by day of the week. The system handles user state management, payment processing, and transaction logging.</p>
+<h2 id="architecture">Architecture</h2>
+<p>The application follows a layered architecture with the following key components:</p>
+<h3 id="controllers">Controllers</h3>
+<ul>
+<li><strong>UssdController</strong>: Handles incoming USSD requests via the <code>/index</code> endpoint</li>
+</ul>
+<h3 id="services">Services</h3>
+<ul>
+<li><strong>UssdService</strong>: Core business logic for processing USSD requests and managing user flows</li>
+<li><strong>MessageService</strong>: Handles SMS notifications via mNotify API</li>
+</ul>
+<h3 id="background-services">Background Services</h3>
+<ul>
+<li><strong>PaymentBackgroundService</strong>: Processes payments asynchronously using a channel-based approach</li>
+<li><strong>UssdSessionBackgroundService</strong>: Manages USSD session cleanup (implementation details in source)</li>
+</ul>
+<h3 id="data-layer">Data Layer</h3>
+<ul>
+<li><strong>UssdDataContext</strong>: Entity Framework Core DbContext for database operations</li>
+<li><strong>Models</strong>: Data transfer objects and entities (UssdRequest, UssdResponse, UssdTransaction, etc.)</li>
+</ul>
+<h3 id="session-management">Session Management</h3>
+<ul>
+<li><strong>UssdSessionManager</strong>: Static concurrent dictionary for managing user states across requests</li>
+<li><strong>UserState</strong>: Record containing current state, selected values, and session data</li>
+</ul>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>.NET 5.0 SDK</li>
+<li>SQL Server (Express or full version)</li>
+<li>Visual Studio 2019+ or VS Code with C# extensions</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<ol type="1">
+<li><p>Clone the repository:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>repository-url<span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ObririUssd</span></code></pre></div></li>
+<li><p>Restore NuGet packages:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dotnet</span> restore</span></code></pre></div></li>
+<li><p>Update the connection string in <code>appsettings.json</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ConnectionStrings&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;DefaultConnection&quot;</span><span class="fu">:</span> <span class="st">&quot;Server=YOUR_SERVER;Database=Ussd;Trusted_Connection=true;MultipleActiveResultSets=true&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div></li>
+<li><p>Run database migrations:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dotnet</span> ef database update</span></code></pre></div></li>
+<li><p>Build and run the application:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dotnet</span> build</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dotnet</span> run</span></code></pre></div></li>
+</ol>
+<h2 id="configuration">Configuration</h2>
+<h3 id="appsettings.json">appsettings.json</h3>
+<ul>
+<li><strong>ConnectionStrings.DefaultConnection</strong>: SQL Server connection string</li>
+<li><strong>Logging</strong>: Log levels for different components</li>
+</ul>
+<h3 id="environment-variables">Environment Variables</h3>
+<p>The application supports environment-specific configurations via <code>appsettings.Development.json</code> and <code>appsettings.Production.json</code>.</p>
+<h2 id="api-documentation">API Documentation</h2>
+<h3 id="endpoints">Endpoints</h3>
+<h4 id="post-index">POST /index</h4>
+<p>Processes USSD requests.</p>
+<p><strong>Request Body:</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;USERID&quot;</span><span class="fu">:</span> <span class="st">&quot;WEB_MATE&quot;</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;MSISDN&quot;</span><span class="fu">:</span> <span class="st">&quot;233XXXXXXXXX&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;USERDATA&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;MSGTYPE&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;NETWORK&quot;</span><span class="fu">:</span> <span class="st">&quot;MTN&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Response:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;USERID&quot;</span><span class="fu">:</span> <span class="st">&quot;WEB_MATE&quot;</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;MSISDN&quot;</span><span class="fu">:</span> <span class="st">&quot;233XXXXXXXXX&quot;</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;MSG&quot;</span><span class="fu">:</span> <span class="st">&quot;Menu options...&quot;</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;MSGTYPE&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="swagger-documentation">Swagger Documentation</h3>
+<p>When running in development mode, access Swagger UI at <code>https://localhost:5001/swagger</code></p>
+<h2 id="database-schema">Database Schema</h2>
+<h3 id="ussdtransaction">UssdTransaction</h3>
+<ul>
+<li><code>Id</code>: Primary key</li>
+<li><code>TSN</code>: Transaction sequence number</li>
+<li><code>PhoneNumber</code>: User’s phone number</li>
+<li><code>OptionName</code>: Selected game option</li>
+<li><code>OptionValue</code>: Selected numbers/values</li>
+<li><code>Amount</code>: Transaction amount</li>
+<li><code>WinningAmount</code>: Winning amount (if applicable)</li>
+<li><code>Win</code>: Win status</li>
+<li><code>PaymentStatus</code>: Payment processing status</li>
+<li><code>ApprovedBy</code>: Approver identifier</li>
+<li><code>Proccessed</code>: Processing status</li>
+<li><code>TransactionDate</code>: Transaction timestamp</li>
+<li><code>Message</code>: Transaction message</li>
+<li><code>Status</code>: General status</li>
+<li><code>GameType</code>: Type of game</li>
+</ul>
+<h3 id="ussdlock">UssdLock</h3>
+<ul>
+<li><code>Id</code>: Primary key</li>
+<li><code>StartTime</code>: Draw start hour</li>
+<li><code>EndTime</code>: Draw end hour</li>
+<li><code>GameType</code>: Game type to lock</li>
+<li><code>Disabled</code>: Lock status</li>
+</ul>
+<h3 id="transactionlog">TransactionLog</h3>
+<ul>
+<li>Logs for transaction auditing</li>
+</ul>
+<h2 id="ussd-flow">USSD Flow</h2>
+<p>The USSD service implements a state-based menu system:</p>
+<ol type="1">
+<li><strong>Initial Menu</strong>: Displays daily options based on current day</li>
+<li><strong>Game Selection</strong>: User selects a game type (Direct-1 to Direct-5, Perm-2, Perm-3)</li>
+<li><strong>Number Input</strong>: User enters numbers (1-90 range)</li>
+<li><strong>Amount Input</strong>: User enters bet amount</li>
+<li><strong>Payment Processing</strong>: Asynchronous payment via background service</li>
+<li><strong>Confirmation</strong>: SMS sent with transaction details</li>
+</ol>
+<h3 id="state-management">State Management</h3>
+<ul>
+<li>States are tracked using a string-based system (e.g., “11”, “2”, “31”)</li>
+<li>User sessions stored in memory with 30-second timeout</li>
+<li>Concurrent dictionary ensures thread safety</li>
+</ul>
+<h3 id="game-types">Game Types</h3>
+<ul>
+<li><strong>Direct-X</strong>: Select exactly X numbers</li>
+<li><strong>Perm-2</strong>: Select minimum 3 numbers for 2-number permutations</li>
+<li><strong>Perm-3</strong>: Select minimum 4 numbers for 3-number permutations</li>
+</ul>
+<h3 id="daily-options">Daily Options</h3>
+<p>Different games available each day of the week: - Monday: PIONEER, MONDAY SPECIAL - Tuesday: VAG EAST, LUCKY TUESDAY - Wednesday: VAG WEST, MID-WEEK - Thursday: AFRICAN LOTTO, FORTUNE THURSDAY - Friday: OBIRI SPECIAL, FRIDAY BONANZA - Saturday: OLD SOLDIER, NATIONAL - Sunday: SUNDAY SPECIAL</p>
+<h2 id="payment-processing">Payment Processing</h2>
+<p>Payments are handled asynchronously through a channel-based system:</p>
+<ol type="1">
+<li>USSD request triggers payment initiation</li>
+<li>Request queued in PaymentChannel</li>
+<li>PaymentBackgroundService processes queue</li>
+<li>External payment API called</li>
+<li>On approval: transaction saved, SMS sent</li>
+<li>On failure: appropriate error handling</li>
+</ol>
+<h2 id="sms-notifications">SMS Notifications</h2>
+<p>SMS messages sent via mNotify API for: - Transaction confirmations - Ticket details - Win notifications (future feature)</p>
+<h2 id="background-services-1">Background Services</h2>
+<h3 id="paymentbackgroundservice">PaymentBackgroundService</h3>
+<ul>
+<li>Consumes payment requests from channel</li>
+<li>Processes payments with external provider</li>
+<li>Saves successful transactions</li>
+<li>Sends confirmation SMS</li>
+</ul>
+<h3 id="ussdsessionbackgroundservice">UssdSessionBackgroundService</h3>
+<ul>
+<li>Cleans up expired user sessions</li>
+<li>Manages memory usage</li>
+</ul>
+<h2 id="error-handling">Error Handling</h2>
+<ul>
+<li>Input validation for number ranges and formats</li>
+<li>Duplicate number detection</li>
+<li>Session timeout handling</li>
+<li>Payment failure scenarios</li>
+<li>Database transaction safety</li>
+</ul>
+<h2 id="security-considerations">Security Considerations</h2>
+<ul>
+<li>Input sanitization and validation</li>
+<li>SQL injection prevention via EF Core</li>
+<li>HTTPS enforcement in production</li>
+<li>API key management for external services</li>
+</ul>
+<h2 id="deployment">Deployment</h2>
+<h3 id="development">Development</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dotnet</span> run <span class="at">--environment</span> Development</span></code></pre></div>
+<h3 id="production">Production</h3>
+<ol type="1">
+<li><p>Publish the application:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dotnet</span> publish <span class="at">-c</span> Release <span class="at">-o</span> ./publish</span></code></pre></div></li>
+<li><p>Configure production appsettings.json</p></li>
+<li><p>Set up IIS or reverse proxy</p></li>
+<li><p>Ensure database connectivity</p></li>
+<li><p>Configure SSL certificates</p></li>
+</ol>
+<h3 id="docker-optional">Docker (Optional)</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode dockerfile"><code class="sourceCode dockerfile"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> mcr.microsoft.com/dotnet/aspnet:5.0</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> ./publish /app</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WORKDIR</span> /app</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ENTRYPOINT</span> [<span class="st">&quot;dotnet&quot;</span>, <span class="st">&quot;ObririUssd.dll&quot;</span>]</span></code></pre></div>
+<h2 id="monitoring-and-logging">Monitoring and Logging</h2>
+<ul>
+<li>Structured logging via Microsoft.Extensions.Logging</li>
+<li>Transaction logging in database</li>
+<li>Error tracking and alerting (to be implemented)</li>
+<li>Performance monitoring (to be implemented)</li>
+</ul>
+<h2 id="testing">Testing</h2>
+<h3 id="unit-tests">Unit Tests</h3>
+<ul>
+<li>Service layer testing</li>
+<li>Validation logic testing</li>
+<li>State management testing</li>
+</ul>
+<h3 id="integration-tests">Integration Tests</h3>
+<ul>
+<li>API endpoint testing</li>
+<li>Database integration testing</li>
+<li>Payment flow testing</li>
+</ul>
+<h2 id="contributing">Contributing</h2>
+<ol type="1">
+<li>Fork the repository</li>
+<li>Create a feature branch</li>
+<li>Make changes with tests</li>
+<li>Submit pull request</li>
+</ol>
+<h3 id="code-standards">Code Standards</h3>
+<ul>
+<li>Follow C# coding conventions</li>
+<li>Use async/await for I/O operations</li>
+<li>Implement proper error handling</li>
+<li>Add XML documentation comments</li>
+</ul>
+<h2 id="future-enhancements">Future Enhancements</h2>
+<ul>
+<li>Win checking and payout processing</li>
+<li>Admin panel for game management</li>
+<li>Advanced analytics and reporting</li>
+<li>Multi-language support</li>
+<li>Mobile app integration</li>
+<li>Real-time notifications</li>
+</ul>
+<h2 id="support">Support</h2>
+<p>For support or questions, please contact the development team.</p>
+<h2 id="documentation">Documentation</h2>
+<p>For detailed technical documentation, see the <a href="./docs/">docs</a> directory:</p>
+<ul>
+<li><a href="./docs/api-reference.md">API Reference</a> - Detailed API specifications and USSD flow documentation</li>
+<li><a href="./docs/database-schema.md">Database Schema</a> - Database design, tables, and relationships</li>
+<li><a href="./docs/architecture.md">Architecture</a> - System design patterns and architectural decisions</content> &lt;filePath=“filePath”&gt;/Users/rehotech/DotnetApps2026/ObririUssd/ObririUssd/README.md</li>
+</ul>
