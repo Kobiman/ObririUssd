@@ -23,7 +23,7 @@ namespace ObririUssd.Services
         };
         Dictionary<string, string> OptionsOfTheWeek = new Dictionary<string, string>
         {
-            { "1", "1. PIONEER\n2. MONDAY SPECIAL" },{ "2", "1. VAG EAST\n2. LUCKY TUESDAY" },{ "3", "1. VAG WEST\n 2. MID-WEEK" },{ "4", "1. AFRICAN LOTTO\n2. FORTUNE THURSDAY" },{ "5", "1. OBIRI SPECIAL\n2. FRIDAY BONANZA" },{ "6", "1. OLD SOLDIER\n2. NATIONAL" },{ "7", "1. SUNDAY SPECIAL" }
+            { "1", "Welcome to VAG-Obiri Lotteries\n1. PIONEER\n2. MONDAY SPECIAL" },{ "2", "Welcome to VAG-Obiri Lotteries\n1. VAG EAST\n2. LUCKY TUESDAY" },{ "3", "Welcome to VAG-Obiri Lotteries\n1. VAG WEST\n 2. MID-WEEK" },{ "4", "Welcome to VAG-Obiri Lotteries\n1. AFRICAN LOTTO\n2. FORTUNE THURSDAY" },{ "5", "Welcome to VAG-Obiri Lotteries\n1. OBIRI SPECIAL\n2. FRIDAY BONANZA" },{ "6", "Welcome to VAG-Obiri Lotteries\n1. OLD SOLDIER\n2. NATIONAL" },{ "7", "1. SUNDAY SPECIAL" }
         };
         Dictionary<string, Dictionary<string, string>> OptionsOfTheDay = new Dictionary<string, Dictionary<string, string>>
         {
