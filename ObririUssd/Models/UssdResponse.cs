@@ -24,14 +24,15 @@ namespace ObririUssd.Models
 
         //
 
-        public static UssdResponse CreateResponse(string userid, string MSISDN, string message,bool MSGTYPE)
+        public static UssdResponse CreateResponse(string userid, string MSISDN, string message,bool continueSession)
         {
             return new UssdResponse
             {
                 UserID = userid,
                 Msisdn = MSISDN,
                 Message = message,
-               // MSGTYPE = MSGTYPE
+                ContinueSession = continueSession
+                // MSGTYPE = MSGTYPE
             };
         }
     }

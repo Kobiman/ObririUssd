@@ -11,7 +11,7 @@ namespace ObririUssd.BackgroundServices
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(25000, stoppingToken);
+                await Task.Delay(180000, stoppingToken);
                 foreach(var state in UssdSessionManager.PreviousState)
                 {
                     if (state.Value.Duration <= DateTime.Now)

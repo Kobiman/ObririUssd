@@ -50,20 +50,20 @@ namespace ObririUssd.Services
         {
             try
             {
-                if(PreviousState.TryGetValue(request.Msisdn, out UserState s))
+                if(PreviousState.TryGetValue(request.SessionID, out UserState s))
                 {
                     var duration = await _context.UssdLock.FirstOrDefaultAsync(x=>x.GameType == s.GameType, cancellationToken: token);
                     if(duration != null)
                     {
                         if (duration.Disabled)
                         {
-                            PreviousState.TryRemove(request.Msisdn, out _);
+                            PreviousState.TryRemove(request.SessionID, out _);
                             return UssdResponse.CreateResponse(userid, request.Msisdn, $"Sorry Draw is closed for {s.GameType}", false);
                         }
 
                         if (duration.DrawHasEnded())
                         {
-                            PreviousState.TryRemove(request.Msisdn, out _);
+                            PreviousState.TryRemove(request.SessionID, out _);
                             return UssdResponse.CreateResponse(userid, request.Msisdn, $"Sorry Draw Has Ended for {s.GameType}", false);
                         }
                     }
@@ -76,12 +76,12 @@ namespace ObririUssd.Services
                 if (state?.CurrentState?.Length == 1 && string.IsNullOrWhiteSpace(request.UserData))
                 {
                     token.ThrowIfCancellationRequested();
-                    if (PreviousState.TryGetValue(request.Msisdn, out state))
+                    if (PreviousState.TryGetValue(request.SessionID, out state))
                     {
-                        PreviousState.TryRemove(request.Msisdn, out UserState tt);
+                        PreviousState.TryRemove(request.SessionID, out UserState tt);
                         var _state = tt with { CurrentState = "" };
-                        PreviousState.TryAdd(request.Msisdn, _state);
-                        PreviousState.TryGetValue(request.Msisdn, out state);
+                        PreviousState.TryAdd(request.SessionID, _state);
+                        PreviousState.TryGetValue(request.SessionID, out state);
                     }
                     OptionsOfTheWeek.TryGetValue(DaysOfTheWeek[DateTime.Now.DayOfWeek.ToString()], out string option);
                     return ProcessMenu(request, $"{option}");
@@ -110,9 +110,9 @@ namespace ObririUssd.Services
                 if (state?.CurrentState?.Length == 3 && string.IsNullOrWhiteSpace(request.UserData))
                 {
                     token.ThrowIfCancellationRequested();
-                    PreviousState.TryRemove(request.Msisdn, out UserState userState);
+                    PreviousState.TryRemove(request.SessionID, out UserState userState);
                     var state = userState with { CurrentState = userState.CurrentState[0..^1], PreviousData = userState.PreviousData };
-                    PreviousState.TryAdd(request.Msisdn, state);
+                    PreviousState.TryAdd(request.SessionID, state);
                     return UssdResponse.CreateResponse(userid, request.Msisdn, $"Please Enter {state?.PreviousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
                 }
                 else if (state?.CurrentState?.Length == 3)
@@ -124,9 +124,9 @@ namespace ObririUssd.Services
                         {
                             if (request.UserData.Split(" ").Length >= 4 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                             {
-                                PreviousState.TryRemove(request.Msisdn, out UserState t);
+                                PreviousState.TryRemove(request.SessionID, out UserState t);
                                 var state = t with { SelectedValues = request.UserData };
-                                PreviousState.TryAdd(request.Msisdn, state);
+                                PreviousState.TryAdd(request.SessionID, state);
                                 return UssdResponse.CreateResponse(userid, request.Msisdn, "Enter amount", true);
                             }
                         }
@@ -134,9 +134,9 @@ namespace ObririUssd.Services
                         {
                             if (request.UserData.Split(" ").Length >= 3 && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                             {
-                                PreviousState.TryRemove(request.Msisdn, out UserState t);
+                                PreviousState.TryRemove(request.SessionID, out UserState t);
                                 var state = t with { SelectedValues = request.UserData };
-                                PreviousState.TryAdd(request.Msisdn, state);
+                                PreviousState.TryAdd(request.SessionID, state);
                                 return UssdResponse.CreateResponse(userid, request.Msisdn, "Enter amount", true);
                             }
                         }
@@ -144,16 +144,16 @@ namespace ObririUssd.Services
                         {
                             if (previousData.Equals(request.UserData.Split(" ").Length) && request.ValidateInputFormats() && request.ValidateInputRanges(90, 1) && !request.HasDuplicate())
                             {
-                                PreviousState.TryRemove(request.Msisdn, out UserState t);
+                                PreviousState.TryRemove(request.SessionID, out UserState t);
                                 var state = t with { SelectedValues = request.UserData };
-                                PreviousState.TryAdd(request.Msisdn, state);
+                                PreviousState.TryAdd(request.SessionID, state);
                                 return UssdResponse.CreateResponse(userid, request.Msisdn, "Enter amount", true);
                             }
                         }
 
-                        PreviousState.TryRemove(request.Msisdn, out UserState tt);
+                        PreviousState.TryRemove(request.SessionID, out UserState tt);
                         var _state = tt with { CurrentState = tt.CurrentState[0..^1], PreviousData = tt.PreviousData, SelectedValues = request.UserData };
-                        PreviousState.TryAdd(request.Msisdn, _state);
+                        PreviousState.TryAdd(request.SessionID, _state);
                         return UssdResponse.CreateResponse(userid, request.Msisdn, $"Please Enter {previousData} distinct number(s) from (1-90). \n Separate each number with a space ", true);
                     }
                 }
@@ -167,6 +167,7 @@ namespace ObririUssd.Services
                             UserID = userid,
                             Msisdn = request.Msisdn,
                             Message = "Input value is not in the rigth format",
+                            ContinueSession = true,
                            // MSGTYPE = true
                         };
                     }
@@ -189,7 +190,7 @@ namespace ObririUssd.Services
                     //    return await ProcessFinalState(request, m.Message, m.Option, state.SelectedValues);
                     //}
                     await _channel.WriteAsync(new PaymentChannelMessage(request,state));
-                    PreviousState.TryRemove(request.Msisdn, out _);
+                    PreviousState.TryRemove(request.SessionID, out _);
                     //var result = JsonSerializer.Deserialize<PaymentResponse>(response.Content);
                     return UssdResponse.CreateResponse(userid, request.Msisdn, $"Processing transaction, please wait... go to approvals if you do not receive prompt.", false);
                 }
@@ -212,7 +213,7 @@ namespace ObririUssd.Services
             }
             catch (OperationCanceledException)
             {
-                PreviousState.TryRemove(request.Msisdn, out UserState _);
+                PreviousState.TryRemove(request.SessionID, out UserState _);
                 return UssdResponse.CreateResponse(userid, request.Msisdn, "", false);
             }
         }
@@ -230,18 +231,18 @@ namespace ObririUssd.Services
                     break;
             }
             var _state = state with { CurrentState = currentState, PreviousData = request.UserData };
-            PreviousState.TryRemove(request.Msisdn, out UserState tt);
-            PreviousState.TryAdd(request.Msisdn, _state);
+            PreviousState.TryRemove(request.SessionID, out UserState tt);
+            PreviousState.TryAdd(request.SessionID, _state);
         }
 
         private void IncreaseState(UssdRequest request)
         {
-            if (PreviousState.TryGetValue(request.Msisdn, out state))
+            if (PreviousState.TryGetValue(request.SessionID, out state))
             {
-                PreviousState.TryRemove(request.Msisdn, out UserState tt);
+                PreviousState.TryRemove(request.SessionID, out UserState tt);
                 var _state = tt with { CurrentState = tt.CurrentState + "1" };
-                PreviousState.TryAdd(request.Msisdn, _state);
-                PreviousState.TryGetValue(request.Msisdn, out state);
+                PreviousState.TryAdd(request.SessionID, _state);
+                PreviousState.TryGetValue(request.SessionID, out state);
             }
         }
 
@@ -290,16 +291,16 @@ namespace ObririUssd.Services
 
         private UssdResponse ProcessSubMenu(UssdRequest request, string message)
         {
-            PreviousState.TryRemove(request.Msisdn, out UserState tt);
+            PreviousState.TryRemove(request.SessionID, out UserState tt);
             var _state = tt with { CurrentState = state.CurrentState, PreviousData = request.UserData };
-            PreviousState.TryAdd(request.Msisdn, _state);
+            PreviousState.TryAdd(request.SessionID, _state);
             return UssdResponse.CreateResponse(userid, request.Msisdn, message, true);
         }
 
         private UssdResponse ProcessMenu(UssdRequest request, string message, string gameType = "")
         {
             UserState _state;
-            PreviousState.TryRemove(request.Msisdn, out UserState s);
+            PreviousState.TryRemove(request.SessionID, out UserState s);
             if(s is null)
             {
                 _state = new UserState { UserOption = request.UserData, CurrentState = "", PreviousData = request.UserData };
@@ -316,7 +317,7 @@ namespace ObririUssd.Services
                 }
                 
             } 
-            PreviousState.TryAdd(request.Msisdn, _state);
+            PreviousState.TryAdd(request.SessionID, _state);
             return UssdResponse.CreateResponse(userid, request.Msisdn, message, true);
         }
     }
