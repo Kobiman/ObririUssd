@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using RestSharp;
+﻿using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ObririUssd.Models
@@ -14,18 +14,18 @@ namespace ObririUssd.Models
     public class UssdRequest
     {
 
-        [JsonProperty("sessionID")]
+        [JsonPropertyName("sessionID")]
         public string SessionID { get; set; }
-        [JsonProperty("userID")]
+        [JsonPropertyName("userID")]
         public string UserID { get; set; }
-        [JsonProperty("newSession")]
+        [JsonPropertyName("newSession")]
         public bool NewSession { get; set; }
-        [JsonProperty("msisdn")]
+        [JsonPropertyName("msisdn")]
         public string Msisdn { get; set; }
-        [JsonProperty("userData")]
+        [JsonPropertyName("userData")]
         public string UserData { get; set; }
         // public bool MSGTYPE { get; set; }
-        [JsonProperty("network")]
+        [JsonPropertyName("network")]
         public string Network { get; set; }
        
        //Arkesel

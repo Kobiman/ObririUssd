@@ -1,22 +1,22 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ObririUssd.Models
 {
     public class UssdResponse
     {
-        [JsonProperty("sessionID")]
+        [JsonPropertyName("sessionID")]
         public string SessionID { get; set; }
-        [JsonProperty("userID")]
+        [JsonPropertyName("userID")]
         public string UserID { get; set; }
-        [JsonProperty("continueSession")]
+        [JsonPropertyName("continueSession")]
         public bool ContinueSession { get; set; }
-        [JsonProperty("msisdn")]
+        [JsonPropertyName("msisdn")]
         public string Msisdn { get; set; }
-        [JsonProperty("message")]
+        [JsonPropertyName("message")]
         public string Message { get; set; }
        
 
