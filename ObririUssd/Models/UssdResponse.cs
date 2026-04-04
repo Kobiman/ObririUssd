@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,11 +8,15 @@ namespace ObririUssd.Models
 {
     public class UssdResponse
     {
+        [JsonProperty("sessionID")]
         public string SessionID { get; set; }
+        [JsonProperty("userID")]
         public string UserID { get; set; }
-
+        [JsonProperty("continueSession")]
         public bool ContinueSession { get; set; }
+        [JsonProperty("msisdn")]
         public string Msisdn { get; set; }
+        [JsonProperty("message")]
         public string Message { get; set; }
        
 
