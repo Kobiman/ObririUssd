@@ -70,6 +70,9 @@ namespace ObririUssd.Migrations
                     b.Property<string>("GameType")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Game_TicketNo")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("StartTime")
                         .HasColumnType("int");
 

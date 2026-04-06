@@ -11,6 +11,7 @@ namespace ObririUssd.Models
         public int StartTime { get; set; }
         public int EndTime { get; set; }
         public string GameType { get; set; }
+        public string Game_TicketNo { get; set; }
         public bool Disabled { get; set; }
 
         public bool DrawHasEnded() => DateTime.Now.Hour < StartTime || DateTime.Now.Hour >= EndTime;
