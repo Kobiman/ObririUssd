@@ -44,6 +44,7 @@ public class TransactionsController : ControllerBase
         try
         {
             // Assign a random 8-digit ticket number
+            ussdLock.Id = 1; // Ensure the ID is set for the existing record
             var random = new Random();
             ussdLock.Game_TicketNo = random.Next(10000000, 100000000).ToString();
            ussdLock.StartTime =  ussdLock.StartTime;
@@ -53,6 +54,7 @@ public class TransactionsController : ControllerBase
 
            _context.UssdLock.Attach(ussdLock);
           //MAP ALL FIELDS
+         
            _context.Entry(ussdLock).Property(x => x.StartTime).IsModified = true;
             _context.Entry(ussdLock).Property(x => x.EndTime).IsModified = true;
              _context.Entry(ussdLock).Property(x => x.GameType).IsModified = true;
